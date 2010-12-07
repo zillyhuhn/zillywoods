@@ -555,7 +555,7 @@ public:
 	~CLayerTele();
 
 	CTeleTile *m_pTeleTile;
-	unsigned m_TeleNum;
+	unsigned char m_TeleNum;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
@@ -569,9 +569,9 @@ public:
 	~CLayerSpeedup();
 
 	CSpeedupTile *m_pSpeedupTile;
-	unsigned m_SpeedupForce;
-	unsigned m_SpeedupMaxSpeed;
-	unsigned m_SpeedupAngle;
+	unsigned char m_SpeedupForce;
+	unsigned char m_SpeedupMaxSpeed;
+	unsigned char m_SpeedupAngle;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
@@ -715,8 +715,8 @@ public:
 
 		ms_pUiGotContext = 0;
 
-		m_TeleNum = 1;
-		m_SwitchNum = 1;
+		m_TeleNumber = 1;
+		m_SwitchNumber = 1;
 		m_TuningNum = 1;
 
 		m_SpeedupForce = 50;
@@ -996,13 +996,13 @@ public:
 	// DDRace
 
 	unsigned char m_TuningNum;
-	unsigned char m_TeleNum;
+	unsigned char m_TeleNumber;
 
 	unsigned char m_SpeedupForce;
 	unsigned char m_SpeedupMaxSpeed;
 	short m_SpeedupAngle;
 
-	unsigned char m_SwitchNum;
+	unsigned char m_SwitchNumber;
 	unsigned char m_SwitchDelay;
 };
 
