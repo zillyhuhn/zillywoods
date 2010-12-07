@@ -508,14 +508,15 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
+								dbg_msg("Tele","%d",((CLayerTiles*)pTiles)->m_pTiles[i].m_Index);
 								if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEIN)
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEIN;
 								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEINEVIL)
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEINEVIL;
 								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEOUT)
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEOUT;
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+								/*else
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;*/
 							}
 							DataFile.UnloadData(pTilemapItem->m_Tele);
 						}
