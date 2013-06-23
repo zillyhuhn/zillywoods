@@ -230,7 +230,7 @@ static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 
 void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
 {
-	if(g_Config.m_ClOverlayEntities == 100)
+	if(!g_Config.m_ClShowQuads || g_Config.m_ClOverlayEntities == 100)
 		return;
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
