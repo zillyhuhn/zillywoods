@@ -12,14 +12,31 @@ class CPlayers : public CComponent
 		const CNetObj_Character *pPlayerChar,
 		const CNetObj_PlayerInfo *pPrevInfo,
 		const CNetObj_PlayerInfo *pPlayerInfo,
-		int ClientID
+		int ClientID,
+		const vec2 &parPosition
 	);
 	void RenderHook(
 		const CNetObj_Character *pPrevChar,
 		const CNetObj_Character *pPlayerChar,
 		const CNetObj_PlayerInfo *pPrevInfo,
 		const CNetObj_PlayerInfo *pPlayerInfo,
-		int ClientID
+		int ClientID,
+		const vec2 &parPosition,
+    	const vec2 &PositionTo
+	);
+
+	// DDRace
+
+	void Predict(
+		const CNetObj_Character *pPrevChar,
+		const CNetObj_Character *pPlayerChar,
+		const CNetObj_PlayerInfo *pPrevInfo,
+		const CNetObj_PlayerInfo *pPlayerInfo,
+		int ClientID,
+		vec2 &PrevPredPos,
+		vec2 &SmoothPos,
+		int &MoveCnt,
+		vec2 &Position
 	);
 
 public:
