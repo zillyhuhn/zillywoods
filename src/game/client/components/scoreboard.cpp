@@ -595,11 +595,16 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			// score
 			if(g_Config.m_ClDDRaceScoreBoard)
 			{
-				int Time = pInfo->m_pPlayerInfo->m_Score == -9999 ? 0 : abs(pInfo->m_pPlayerInfo->m_Score);
-				str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
+				if(pInfo->m_pPlayerInfo->m_Score == -9999)
+					aBuf[0] = 0;
+				else
+				{
+					int Time = abs(pInfo->m_pPlayerInfo->m_Score);
+					str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
+				}
 			}
 			else
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
