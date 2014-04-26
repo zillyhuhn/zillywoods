@@ -72,8 +72,16 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		PREDICTION_MARGIN=1000/50/2, // magic network prediction value
 	};
 
-	class CNetClient m_NetClient;
+	enum
+	{
+		NETCLIENT_MAIN,
+		NETCLIENT_DUMMY,
+		NETCLIENT_CONTACT,
+		NUM_NETCLIENTS
+	};
+
 	class CNetClient m_ContactClient;
+	class CNetClient m_NetClient[NUM_NETCLIENTS];
 	class CDemoPlayer m_DemoPlayer;
 	class CDemoRecorder m_DemoRecorder;
 	class CServerBrowser m_ServerBrowser;
@@ -237,6 +245,13 @@ public:
 	void DisconnectWithReason(const char *pReason);
 	virtual void Disconnect();
 
+	virtual void DummyDisconnect(const char *pReason);
+	virtual void DummyConnect(bool Info = true, int NetClient = 1);
+	virtual bool DummyConnected();
+	void DummyInfo();
+	int m_DummyConnected;
+	int m_LastDummyConnectTime;
+	int SendMsgExY(CMsgPacker *pMsg, int Flags, bool System=true, int NetClient=1);
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo) const;
 
@@ -287,6 +302,10 @@ public:
 
 	static void Con_Connect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Disconnect(IConsole::IResult *pResult, void *pUserData);
+
+	static void Con_DummyConnect(IConsole::IResult *pResult, void *pUserData);
+	static void Con_DummyDisconnect(IConsole::IResult *pResult, void *pUserData);
+
 	static void Con_Quit(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Minimize(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Ping(IConsole::IResult *pResult, void *pUserData);

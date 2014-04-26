@@ -40,6 +40,8 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
+#include <game/client/components/skins.h>
+
 #include "friends.h"
 #include "serverbrowser.h"
 #include "client.h"
@@ -331,7 +333,10 @@ int CClient::SendMsg(CMsgPacker *pMsg, int Flags)
 	}
 
 	if(!(Flags&MSGFLAG_NOSEND))
-		m_NetClient.Send(&Packet);
+	{
+		m_NetClient[g_Config.m_ClDummy].Send(&Packet);
+	}
+
 	return 0;
 }
 
@@ -376,7 +381,7 @@ void CClient::Rcon(const char *pCmd)
 
 bool CClient::ConnectionProblems() const
 {
-	return m_NetClient.GotProblems() != 0;
+	return m_NetClient[g_Config.m_ClDummy].GotProblems() != 0;
 }
 
 void CClient::SendInput()
@@ -503,19 +508,19 @@ void CClient::Connect(const char *pAddress)
 
 	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
 
-	if(net_addr_from_str(&m_ServerAddress, m_aServerAddressStr) != 0 && net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient.NetType()) != 0)
+	if(net_addr_from_str(&m_ServerAddress, m_aServerAddressStr) != 0 && net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient[0].NetType()) != 0)
 	{
 		char aBufMsg[256];
 		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
-		net_host_lookup("localhost", &m_ServerAddress, m_NetClient.NetType());
+		net_host_lookup("localhost", &m_ServerAddress, m_NetClient[0].NetType());
 	}
 
 	m_RconAuthed = 0;
 	m_UseTempRconCommands = 0;
 	if(m_ServerAddress.port == 0)
 		m_ServerAddress.port = Port;
-	m_NetClient.Connect(&m_ServerAddress);
+	m_NetClient[0].Connect(&m_ServerAddress);
 	SetState(IClient::STATE_CONNECTING);
 
 	if(m_DemoRecorder.IsRecording())
@@ -539,7 +544,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_RconAuthed = 0;
 	m_UseTempRconCommands = 0;
 	m_pConsole->DeregisterTempAll();
-	m_NetClient.Disconnect(pReason);
+	m_NetClient[0].Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
 	m_pMap->Unload();
 
@@ -566,9 +571,141 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 void CClient::Disconnect()
 {
+	if(m_DummyConnected)
+		DummyDisconnect(0);
 	DisconnectWithReason(0);
 }
 
+bool CClient::DummyConnected()
+{
+	return m_DummyConnected;
+}
+
+void CClient::DummyConnect(bool Info, int NetClient)
+{
+	if(m_LastDummyConnectTime > GameTick())
+		return;
+
+	char aBuf[512];
+	int Port = 8303;
+	NETADDR ServerAddr;
+
+	m_NetClient[NetClient].Disconnect(0);
+
+	net_addr_from_str(&ServerAddr, g_Config.m_UiServerAddress);
+	str_copy(aBuf, g_Config.m_UiServerAddress, sizeof(aBuf));
+
+	for(int k = 0; aBuf[k]; k++)
+	{
+		if(aBuf[k] == ':')
+		{
+			Port = str_toint(aBuf+k+1);
+			aBuf[k] = 0;
+			break;
+		}
+	}
+
+	ServerAddr.port = Port;
+
+	if(net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient[NetClient].NetType()) != 0)
+	{
+		char aBufMsg[256];
+		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
+		net_host_lookup("localhost", &m_ServerAddress, m_NetClient[NetClient].NetType());
+	}
+
+	//connecting to the server
+	m_DummyConnected = 1;
+	m_NetClient[NetClient].Connect(&ServerAddr);
+
+	// send client info
+	CMsgPacker MsgInfo(NETMSG_INFO);
+	MsgInfo.AddString(GameClient()->NetVersion(), 128);
+	MsgInfo.AddString(g_Config.m_Password, 128);
+	SendMsgExY(&MsgInfo, MSGFLAG_VITAL|MSGFLAG_FLUSH, true, NetClient);
+
+	// update netclient
+	m_NetClient[NetClient].Update();
+
+	// send ready
+	CMsgPacker MsgReady(NETMSG_READY);
+	SendMsgExY(&MsgReady, MSGFLAG_VITAL|MSGFLAG_FLUSH, true, NetClient);
+
+	// startinfo
+	if(Info)
+		DummyInfo();
+	{
+		CNetMsg_Cl_StartInfo Msg;
+		Msg.m_pName = g_Config.m_DummyName;
+		Msg.m_pClan = g_Config.m_DummyClan;
+		Msg.m_Country = g_Config.m_DummyCountry;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
+			Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
+			Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
+		}
+		CMsgPacker Packer(Msg.MsgID());
+		Msg.Pack(&Packer);
+		SendMsgExY(&Packer, MSGFLAG_VITAL|MSGFLAG_FLUSH, false, NetClient);
+	}
+
+	// send enter game an finish the connection
+	CMsgPacker MsgEnter(NETMSG_ENTERGAME);
+	SendMsgExY(&MsgEnter, MSGFLAG_VITAL|MSGFLAG_FLUSH, true, NetClient);
+}
+
+void CClient::DummyDisconnect(const char *pReason)
+{
+	m_NetClient[1].Disconnect(pReason);
+	g_Config.m_ClDummy = 0;
+	m_DummyConnected = 0;
+}
+
+int CClient::SendMsgExY(CMsgPacker *pMsg, int Flags, bool System, int NetClient)
+{
+	CNetChunk Packet;
+
+	mem_zero(&Packet, sizeof(CNetChunk));
+
+	Packet.m_ClientID = 0;
+	Packet.m_pData = pMsg->Data();
+	Packet.m_DataSize = pMsg->Size();
+
+	// HACK: modify the message id in the packet and store the system flag
+	if(*((unsigned char*)Packet.m_pData) == 1 && System && Packet.m_DataSize == 1)
+		dbg_break();
+
+	*((unsigned char*)Packet.m_pData) <<= 1;
+	if(System)
+		*((unsigned char*)Packet.m_pData) |= 1;
+
+	if(Flags&MSGFLAG_VITAL)
+		Packet.m_Flags |= NETSENDFLAG_VITAL;
+	if(Flags&MSGFLAG_FLUSH)
+		Packet.m_Flags |= NETSENDFLAG_FLUSH;
+
+	m_NetClient[NetClient].Send(&Packet);
+	return 0;
+}
+
+void CClient::DummyInfo()
+{
+	CNetMsg_Cl_StartInfo Msg;
+	Msg.m_pName = g_Config.m_DummyName;
+	Msg.m_pClan = g_Config.m_DummyClan;
+	Msg.m_Country = g_Config.m_DummyCountry;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
+		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
+		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
+	}
+	CMsgPacker Packer(Msg.MsgID());
+	Msg.Pack(&Packer);
+	SendMsgExY(&Packer, MSGFLAG_VITAL|MSGFLAG_FLUSH, false, 1);
+}
 
 void CClient::GetServerInfo(CServerInfo *pServerInfo) const
 {
@@ -763,7 +900,7 @@ void CClient::Quit()
 
 const char *CClient::ErrorString() const
 {
-	return m_NetClient.ErrorString();
+	return m_NetClient[0].ErrorString();
 }
 
 void CClient::Render()
@@ -984,7 +1121,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			Packet.m_pData = VERSIONSRV_GETMAPLIST;
 			Packet.m_DataSize = sizeof(VERSIONSRV_GETMAPLIST);
 			Packet.m_Flags = NETSENDFLAG_CONNLESS;
-			m_ContactClient.Send(&Packet);
+			m_NetClient[NETCLIENT_CONTACT].Send(&Packet);
 		}
 
 		// map version list
@@ -1491,22 +1628,25 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 void CClient::PumpNetwork()
 {
-	m_NetClient.Update();
+	for(int i = 0; i < NUM_NETCLIENTS; i++)
+	{
+		m_NetClient[i].Update();
+	}
 
 	if(State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// check for errors
-		if(State() != IClient::STATE_OFFLINE && State() != IClient::STATE_QUITING && m_NetClient.State() == NETSTATE_OFFLINE)
+		if(State() != IClient::STATE_OFFLINE && State() != IClient::STATE_QUITING && m_NetClient[0].State() == NETSTATE_OFFLINE)
 		{
 			SetState(IClient::STATE_OFFLINE);
 			Disconnect();
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "offline error='%s'", m_NetClient.ErrorString());
+			str_format(aBuf, sizeof(aBuf), "offline error='%s'", m_NetClient[0].ErrorString());
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		}
 
 		//
-		if(State() == IClient::STATE_CONNECTING && m_NetClient.State() == NETSTATE_ONLINE)
+		if(State() == IClient::STATE_CONNECTING && m_NetClient[0].State() == NETSTATE_ONLINE)
 		{
 			// we switched to online
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "connected, sending info");
@@ -1515,20 +1655,18 @@ void CClient::PumpNetwork()
 		}
 	}
 
-	// process non-connless packets
 	CNetChunk Packet;
-	while(m_NetClient.Recv(&Packet))
+	for(int i = 0; i < NUM_NETCLIENTS; i++)
 	{
-		if(!(Packet.m_Flags&NETSENDFLAG_CONNLESS))
-			ProcessServerPacket(&Packet);
-	}
-
-	// process connless packets data
-	m_ContactClient.Update();
-	while(m_ContactClient.Recv(&Packet))
-	{
-		if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
-			ProcessConnlessPacket(&Packet);
+		while(m_NetClient[i].Recv(&Packet))
+		{
+			// process non-connless packets
+			if(!(Packet.m_Flags&NETSENDFLAG_CONNLESS))
+				ProcessServerPacket(&Packet);
+			// process connless packets data
+			if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
+				ProcessConnlessPacket(&Packet);
+		}
 	}
 }
 
@@ -1739,7 +1877,7 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_ContactClient.NetType());
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_NetClient[NETCLIENT_MAIN].NetType());
 		m_VersionInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_START)
@@ -1760,11 +1898,16 @@ void CClient::VersionUpdate()
 				Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
 				Packet.m_Flags = NETSENDFLAG_CONNLESS;
 
-				m_ContactClient.Send(&Packet);
+				// m_NetClient[NETCLIENT_CONTACT].Send(&Packet);
+				for(int i = 0; i < NUM_NETCLIENTS; i++)
+				{
+					m_NetClient[i].Send(&Packet);
+				}
 				m_VersionInfo.m_State = CVersionInfo::STATE_READY;
 			}
 			else
 				m_VersionInfo.m_State = CVersionInfo::STATE_ERROR;
+			m_VersionInfo.m_State = CVersionInfo::STATE_READY;
 		}
 	}
 }
@@ -1791,7 +1934,10 @@ void CClient::InitInterfaces()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
-	m_ServerBrowser.Init(&m_ContactClient, m_pGameClient->NetVersion());
+	for(int i = 0; i < NUM_NETCLIENTS; i++)
+	{
+		m_ServerBrowser.Init(&m_NetClient[i], m_pGameClient->NetVersion());
+	}
 	m_Friends.Init();
 }
 
@@ -1925,16 +2071,16 @@ void CClient::Run()
 			mem_zero(&BindAddr, sizeof(BindAddr));
 			BindAddr.type = NETTYPE_ALL;
 		}
-		if(!m_NetClient.Open(BindAddr, BindAddr.port ? 0 : NETCREATE_FLAG_RANDOMPORT))
+		for(int i = 0; i < NUM_NETCLIENTS; i++)
 		{
-			dbg_msg("client", "couldn't open socket(net)");
-			return;
-		}
-		BindAddr.port = 0;
-		if(!m_ContactClient.Open(BindAddr, 0))
-		{
-			dbg_msg("client", "couldn't open socket(contact)");
-			return;
+			int flags = BindAddr.port ? 0 : NETCREATE_FLAG_RANDOMPORT;
+			if(i == NETCLIENT_CONTACT)
+				flags = 0;
+			if(!m_NetClient[i].Open(BindAddr, flags))
+			{
+				dbg_msg("client", "couldn't open socket(%d)", i);
+				return;
+			}
 		}
 	}
 
@@ -1945,7 +2091,10 @@ void CClient::Run()
 	Input()->Init();
 
 	// start refreshing addresses while we load
-	MasterServer()->RefreshAddresses(m_ContactClient.NetType());
+	for(int i = 0; i < NUM_NETCLIENTS; i++)
+	{
+		MasterServer()->RefreshAddresses(m_NetClient[i].NetType());
+	}
 
 	// init the editor
 	m_pEditor->Init();
@@ -2115,6 +2264,7 @@ void CClient::Run()
 		// beNice
 		if(g_Config.m_ClCpuThrottle)
 			thread_sleep(g_Config.m_ClCpuThrottle);
+			//net_socket_read_wait(m_NetClient[0].m_Socket, g_Config.m_ClCpuThrottle); // TODO: use this
 		else if(g_Config.m_DbgStress || !m_pGraphics->WindowActive())
 			thread_sleep(5);
 
@@ -2174,6 +2324,18 @@ void CClient::Con_Disconnect(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->Disconnect();
+}
+
+void CClient::Con_DummyConnect(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DummyConnect(false);
+}
+
+void CClient::Con_DummyDisconnect(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DummyDisconnect(0);
 }
 
 void CClient::Con_Quit(IConsole::IResult *pResult, void *pUserData)
@@ -2243,7 +2405,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 	int Crc;
 
 	Disconnect();
-	m_NetClient.ResetErrorString();
+	m_NetClient[0].ResetErrorString();
 
 	// try to start playback
 	m_DemoPlayer.SetListner(this);
@@ -2462,6 +2624,9 @@ void CClient::ConchainWindowVSync(IConsole::IResult *pResult, void *pUserData, I
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+
+	m_pConsole->Register("dummy_connect", "", CFGFLAG_CLIENT, Con_DummyConnect, this, "connect dummy");
+	m_pConsole->Register("dummy_disconnect", "", CFGFLAG_CLIENT, Con_DummyDisconnect, this, "disconnect dummy");
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
