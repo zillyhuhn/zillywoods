@@ -444,7 +444,8 @@ void CGameClient::OnReset()
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecMode = SPEC_FREEVIEW;
 	m_DemoSpecID = -1;
-	m_Tuning = CTuningParams();
+	m_Tuning[0] = CTuningParams();
+	m_Tuning[1] = CTuningParams();
 	m_MuteServerBroadcast = false;
 	m_LastGameStartTick = -1;
 	m_LastFlagCarrierRed = FLAG_MISSING;
@@ -570,7 +571,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_ServerMode = SERVERMODE_PURE;
 
 		// apply new tuning
-		m_Tuning = NewTuning;
+		m_Tuning[g_Config.m_ClDummy] = NewTuning;
 		return;
 	}
 	else if(MsgId == NETMSGTYPE_SV_VOTEOPTIONLISTADD)
@@ -1102,7 +1103,7 @@ void CGameClient::OnNewSnapshot()
 	CTuningParams StandardTuning;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		m_Tuning = StandardTuning;
+		m_Tuning[g_Config.m_ClDummy] = StandardTuning;
 		mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	}
 
@@ -1356,7 +1357,7 @@ void CGameClient::OnNewSnapshot()
 	if(str_comp(CurrentServerInfo.m_aGameType, "DM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "TDM") != 0 && str_comp(CurrentServerInfo.m_aGameType, "CTF") != 0 &&
 		str_comp(CurrentServerInfo.m_aGameType, "LMS") != 0 && str_comp(CurrentServerInfo.m_aGameType, "LTS") != 0)
 		m_ServerMode = SERVERMODE_MOD;
-	else if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) == 0)
+	else if(mem_comp(&StandardTuning, &m_Tuning[g_Config.m_ClDummy], sizeof(CTuningParams)) == 0)
 		m_ServerMode = SERVERMODE_PURE;
 	else
 		m_ServerMode = SERVERMODE_PUREMOD;
@@ -1446,7 +1447,7 @@ void CGameClient::OnPredict()
 
 	// repredict character
 	CWorldCore World;
-	World.m_Tuning = m_Tuning;
+	World.m_Tuning[g_Config.m_ClDummy] = m_Tuning[g_Config.m_ClDummy];
 
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
