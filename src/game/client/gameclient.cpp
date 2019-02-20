@@ -856,7 +856,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 				return;
 			}
 
-			if(m_LocalClientID != -1 && !pMsg->m_Silent)
+			if(m_LocalClientID != -1 && !(pMsg->m_Silent && !g_Config.m_ClShowSilentMessages))
 			{
 				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
 
@@ -917,7 +917,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 			return;
 		}
 
-		if(!pMsg->m_Silent)
+		if(!(pMsg->m_Silent && !g_Config.m_ClShowSilentMessages))
 		{
 			DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason);
 
@@ -1005,7 +1005,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 			}
 		}
 
-		if(pMsg->m_Silent == 0)
+		if(!(pMsg->m_Silent && !g_Config.m_ClShowSilentMessages))
 		{
 			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_Team);
 		}
