@@ -858,7 +858,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 
 			if(m_LocalClientID != -1 && !(pMsg->m_Silent && !g_Config.m_ClShowSilentMessages))
 			{
-				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
+				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team, pMsg->m_Silent);
 
 				if(m_pDemoRecorder->IsRecording())
 				{
@@ -919,7 +919,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 
 		if(!(pMsg->m_Silent && !g_Config.m_ClShowSilentMessages))
 		{
-			DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason);
+			DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason, pMsg->m_Silent);
 
 			CNetMsg_De_ClientLeave Msg;
 			Msg.m_pName = m_aClients[pMsg->m_ClientID].m_aName;
@@ -1007,7 +1007,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 
 		if(!(pMsg->m_Silent && !g_Config.m_ClShowSilentMessages))
 		{
-			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_Team);
+			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_Team, pMsg->m_Silent);
 		}
 	}
 	else if(MsgId == NETMSGTYPE_SV_READYTOENTER)
@@ -1744,7 +1744,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 	UpdateRenderInfo(pGameClient, ClientID, false);
 }
 
-void CGameClient::DoEnterMessage(const char *pName, int ClientID, int Team)
+void CGameClient::DoEnterMessage(const char *pName, int ClientID, int Team, bool Silent)
 {
 	char aBuf[128], aLabel[64];
 	GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, pName);
@@ -1755,10 +1755,12 @@ void CGameClient::DoEnterMessage(const char *pName, int ClientID, int Team)
 	case STR_TEAM_BLUE: str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the blue team"), aLabel); break;
 	case STR_TEAM_SPECTATORS: str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the spectators"), aLabel); break;
 	}
+	if(Silent)
+		str_append(aBuf, " [silent]", sizeof(aBuf));
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
-void CGameClient::DoLeaveMessage(const char *pName, int ClientID, const char *pReason)
+void CGameClient::DoLeaveMessage(const char *pName, int ClientID, const char *pReason, bool Silent)
 {
 	char aBuf[128], aLabel[64];
 	GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, pName);
@@ -1766,10 +1768,12 @@ void CGameClient::DoLeaveMessage(const char *pName, int ClientID, const char *pR
 		str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game (%s)"), aLabel, pReason);
 	else
 		str_format(aBuf, sizeof(aBuf), Localize("'%s' has left the game"), aLabel);
+	if(Silent)
+		str_append(aBuf, " [silent]", sizeof(aBuf));
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
-void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team)
+void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team, bool Silent)
 {
 	char aBuf[128];
 	char aLabel[64];
@@ -1781,6 +1785,8 @@ void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team)
 	case STR_TEAM_BLUE: str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the blue team"), aLabel); break;
 	case STR_TEAM_SPECTATORS: str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the spectators"), aLabel); break;
 	}
+	if(Silent)
+		str_append(aBuf, " [silent]", sizeof(aBuf));
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
