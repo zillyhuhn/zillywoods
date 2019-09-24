@@ -312,8 +312,7 @@ public:
 
 	int IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos);
 	void SendTimeoutCode();
-	int64 m_SentTimeoutCode;
-	bool m_IsCmdSysServer;
+	bool m_SentTimeoutCode;
 };
 
 const char *Localize(const char *pStr, const char *pContext="")
