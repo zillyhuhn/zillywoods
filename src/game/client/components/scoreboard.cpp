@@ -201,7 +201,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float ClanOffset = NameOffset+NameLength+ReadyLength, ClanLength = 88.0f-IdSize/2;
 	float KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
-	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = TextRender()->TextWidth(0, HeadlineFontsize, "00:00:0", -1, -1.0f);
+	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = TextRender()->TextWidth(0, HeadlineFontsize + Spacing, "00:00", -1, -1.0f);
 	float tw = 0.0f;
 
 	bool NoTitle = pTitle? false : true;
