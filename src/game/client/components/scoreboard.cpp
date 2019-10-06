@@ -201,7 +201,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float ClanOffset = NameOffset+NameLength+ReadyLength, ClanLength = 88.0f-IdSize/2;
 	float KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
-	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = 35.0f;
+	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = TextRender()->TextWidth(0, HeadlineFontsize, "00:00:0", -1, -1.0f);
 	float tw = 0.0f;
 
 	bool NoTitle = pTitle? false : true;
@@ -337,6 +337,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1, -1.0f);
+	float ScoreWidth = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1, -1.0f);
+	tw = ScoreLength > ScoreWidth ? ScoreLength : ScoreWidth;
 	TextRender()->Text(0, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Score"), -1.0f);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -450,6 +452,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			}
 		}
 	}
+
+	bool IsRaceGametype = m_pClient->IsRaceGametype();
 
 	for(int i = 0 ; i < NumRenderScoreIDs ; i++)
 	{
@@ -591,8 +595,19 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			// score
+			if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
+			{
+				if(pInfo->m_pPlayerInfo->m_Score == -9999)
+					aBuf[0] = 0;
+				else
+				{
+					int Time = abs(pInfo->m_pPlayerInfo->m_Score);
+					str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
+				}
+			}
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->SetCursor(&Cursor, ScoreOffset+ScoreLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
 			Cursor.m_LineWidth = ScoreLength;
