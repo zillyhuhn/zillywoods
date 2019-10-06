@@ -453,6 +453,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		}
 	}
 
+	bool IsRaceGametype = m_pClient->IsRaceGametype();
+
 	for(int i = 0 ; i < NumRenderScoreIDs ; i++)
 	{
 		if(RenderScoreIDs[i] >= 0)
@@ -593,7 +595,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			// score
-			if(g_Config.m_ClDDRaceScoreBoard)
+			if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
 			{
 				if(pInfo->m_pPlayerInfo->m_Score == -9999)
 					aBuf[0] = 0;

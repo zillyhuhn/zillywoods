@@ -313,6 +313,7 @@ public:
 	int IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos);
 	void SendTimeoutCode();
 	bool m_SentTimeoutCode;
+	bool IsRaceGametype();
 };
 
 const char *Localize(const char *pStr, const char *pContext="")
