@@ -1178,14 +1178,29 @@ void CChat::OnRender()
 
 			Graphics()->QuadsBegin();
 
-			// image orientation
 			const int LocalCID = m_pClient->m_LocalClientID;
+			// hacky ZillyWoods dummy id fix
+			if(LocalCID != -1)
+			{
+				if(m_pClient->m_LocalIDs[0] != -1 && m_pClient->m_LocalIDs[0] == Line.m_TargetID)
+					Line.m_TargetID = LocalCID;
+				else if(m_pClient->m_LocalIDs[1] != -1 && m_pClient->m_LocalIDs[1] == Line.m_TargetID)
+					Line.m_TargetID = LocalCID;
+			}
+
+			// image orientation
 			if(Line.m_ClientID == LocalCID && Line.m_TargetID >= 0)
 				Graphics()->QuadsSetSubset(1, 0, 0, 1); // To
 			else if(Line.m_TargetID == LocalCID)
 				Graphics()->QuadsSetSubset(0, 0, 1, 1); // From
+			else if(LocalCID == -1) // dummy connecting ( it is most likley a to )
+				Graphics()->QuadsSetSubset(1, 0, 0, 1); // To
 			else
+			{
+				dbg_msg("zilly", "crash on whisper msg '%s'", Line.m_aText);
+				dbg_msg("zilly", "target=%d local=%d local[0]=%d local[1]=%d", Line.m_TargetID, LocalCID, m_pClient->m_LocalIDs[0], m_pClient->m_LocalIDs[1]);
 				dbg_break();
+			}
 
 
 			// shadow pass
