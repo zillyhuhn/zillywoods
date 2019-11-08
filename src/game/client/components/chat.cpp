@@ -1294,12 +1294,15 @@ void CChat::Say(int Mode, const char *pLine)
 
 bool CChat::IsTypingCommand() const
 {
-	return m_Input.GetString()[0] == '/' && !m_IgnoreCommand;
+	return m_Input.GetString()[0] == '/' && !m_IgnoreCommand && g_Config.m_ClClientChatCommands;
 }
 
 // chat commands handlers
 void CChat::HandleCommands(float x, float y, float w)
 {
+	if(!g_Config.m_ClClientChatCommands)
+		return;
+
 	// render commands menu
 	if(m_Mode != CHAT_NONE && IsTypingCommand())
 	{
