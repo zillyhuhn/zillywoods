@@ -423,12 +423,15 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Clan"), -1, -1.0f);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, Localize("Clan"), -1.0f);
 
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
-	TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, "K", -1.0f);
+	if(!(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard))
+	{
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+		tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
+		TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, "K", -1.0f);
 
-	tw = TextRender()->TextWidth(0, HeadlineFontsize, "D", -1, -1.0f);
-	TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, "D", -1.0f);
+		tw = TextRender()->TextWidth(0, HeadlineFontsize, "D", -1, -1.0f);
+		TextRender()->Text(0, DeathOffset+DeathLength/2-tw/2, y+Spacing, HeadlineFontsize, "D", -1.0f);
+	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1, -1.0f);
@@ -628,20 +631,23 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			Cursor.m_LineWidth = ClanLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-			// K
-			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->SetCursor(&Cursor, KillOffset+KillLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
-			Cursor.m_LineWidth = KillLength;
-			TextRender()->TextEx(&Cursor, aBuf, -1);
+			if(!(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard))
+			{
+				// K
+				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
+				tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
+				TextRender()->SetCursor(&Cursor, KillOffset+KillLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
+				Cursor.m_LineWidth = KillLength;
+				TextRender()->TextEx(&Cursor, aBuf, -1);
 
-			// D
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Deaths, 0, 999));
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->SetCursor(&Cursor, DeathOffset+DeathLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
-			Cursor.m_LineWidth = DeathLength;
-			TextRender()->TextEx(&Cursor, aBuf, -1);
+				// D
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Deaths, 0, 999));
+				tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
+				TextRender()->SetCursor(&Cursor, DeathOffset+DeathLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
+				Cursor.m_LineWidth = DeathLength;
+				TextRender()->TextEx(&Cursor, aBuf, -1);
+			}
 
 			// score
 			if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
