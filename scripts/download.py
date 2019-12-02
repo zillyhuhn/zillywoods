@@ -16,8 +16,9 @@ def unzip(filename, where):
 	return z.namelist()[0]
 
 def downloadAll(targets):
-	version = "6c4af62b8c9853bfca1166d672a16abdbf9f0d26"
-	url = "https://github.com/teeworlds/teeworlds-libs/archive/{}.zip".format(version)
+	# Revert "Don't bundle libcurl for Linux"
+	version = "4694e92c8340002f5c5cc168084a343b673ecbf9"
+	url = "https://github.com/ddnet/ddnet-libs/archive/{}.zip".format(version)
 
 	# download and unzip
 	src_package_libs = twlib.fetch_file(url)
@@ -28,12 +29,14 @@ def downloadAll(targets):
 	if not libs_dir:
 		print("couldn't unzip libs")
 		sys.exit(-1)
-	libs_dir = "teeworlds-libs-{}".format(version)
+	libs_dir = "ddnet-libs-{}".format(version)
 
 	if "sdl" in targets:
 		copy_tree(libs_dir + "/sdl/", "other/sdl/")
 	if "freetype" in targets:
 		copy_tree(libs_dir + "/freetype/", "other/freetype/")
+	if "curl" in targets:
+		copy_tree(libs_dir + "/curl/", "other/curl/")
 
 	# cleanup
 	try:
@@ -43,8 +46,8 @@ def downloadAll(targets):
 
 def main():
     import argparse
-    p = argparse.ArgumentParser(description="Download freetype and SDL library and header files for Windows.")
-    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["sdl", "freetype"], help='Target to download. Valid choices are "sdl" and "freetype"')
+    p = argparse.ArgumentParser(description="Download freetype, SDL and curl library and header files for Windows.")
+    p.add_argument("targets", metavar="TARGET", nargs='+', choices=["sdl", "freetype", "curl"], help='Target to download. Valid choices are "sdl", "freetype" and "curl"')
     args = p.parse_args()
 
     downloadAll(args.targets)
