@@ -398,7 +398,7 @@ void CHud::RenderWarmupTimer()
 		m_WarmupHideTick = 0;
 }
 
-void CHud::RenderFps()
+void CHud::RenderTextInfo()
 {
 	if(g_Config.m_ClShowfps)
 	{
@@ -408,6 +408,12 @@ void CHud::RenderFps()
 		char Buf[512];
 		str_format(Buf, sizeof(Buf), "%d", (int)m_AverageFPS);
 		TextRender()->Text(0, m_Width-10-TextRender()->TextWidth(0,12,Buf,-1, -1.0f), 5, 12, Buf, -1.0f);
+	}
+	if(g_Config.m_ClShowpred)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%d", Client()->GetPredictionTime());
+		TextRender()->Text(0, m_Width-10-TextRender()->TextWidth(0,12,aBuf,-1, -1.0f), g_Config.m_ClShowfps ? 20 : 5, 12, aBuf, -1);
 	}
 }
 
@@ -748,7 +754,7 @@ void CHud::OnRender()
 		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();
-		RenderFps();
+		RenderTextInfo();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
