@@ -697,6 +697,7 @@ private:
 	static float RenderSettingsControlsScoreboard(CUIRect View, void *pUser);
 	static float RenderSettingsControlsStats(CUIRect View, void *pUser);
 	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
+	static float RenderSettingsControlsZilly(CUIRect View, void *pUser);
 
 	void DoJoystickAxisPicker(CUIRect View);
 
