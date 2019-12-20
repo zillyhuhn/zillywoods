@@ -14,6 +14,27 @@
 
 #include <engine/shared/config.h>
 
+vec2 ClampVel(int MoveRestriction, vec2 Vel)
+{
+	if(Vel.x > 0 && (MoveRestriction&CANTMOVE_RIGHT))
+	{
+		Vel.x = 0;
+	}
+	if(Vel.x < 0 && (MoveRestriction&CANTMOVE_LEFT))
+	{
+		Vel.x = 0;
+	}
+	if(Vel.y > 0 && (MoveRestriction&CANTMOVE_DOWN))
+	{
+		Vel.y = 0;
+	}
+	if(Vel.y < 0 && (MoveRestriction&CANTMOVE_UP))
+	{
+		Vel.y = 0;
+	}
+	return Vel;
+}
+
 CCollision::CCollision()
 {
 	m_pTiles = 0;
@@ -108,6 +129,133 @@ void CCollision::Init(class CLayers *pLayers)
 			m_pTiles[i].m_Index = 0;
 		}
 	}
+}
+
+enum
+{
+	MR_DIR_HERE=0,
+	MR_DIR_RIGHT,
+	MR_DIR_DOWN,
+	MR_DIR_LEFT,
+	MR_DIR_UP,
+	NUM_MR_DIRS
+};
+
+static int GetMoveRestrictionsRaw(int Direction, int Tile, int Flags)
+{
+	Flags = Flags&(TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE);
+	switch(Tile)
+	{
+	case TILE_STOP:
+		switch(Flags)
+		{
+		case ROTATION_0: return CANTMOVE_DOWN;
+		case ROTATION_90: return CANTMOVE_LEFT;
+		case ROTATION_180: return CANTMOVE_UP;
+		case ROTATION_270: return CANTMOVE_RIGHT;
+
+		case TILEFLAG_HFLIP^ROTATION_0: return CANTMOVE_UP;
+		case TILEFLAG_HFLIP^ROTATION_90: return CANTMOVE_RIGHT;
+		case TILEFLAG_HFLIP^ROTATION_180: return CANTMOVE_DOWN;
+		case TILEFLAG_HFLIP^ROTATION_270: return CANTMOVE_LEFT;
+		}
+		break;
+	case TILE_STOPS:
+		switch(Flags)
+		{
+		case ROTATION_0:
+		case ROTATION_180:
+		case TILEFLAG_HFLIP^ROTATION_0:
+		case TILEFLAG_HFLIP^ROTATION_180:
+			return CANTMOVE_DOWN|CANTMOVE_UP;
+		case ROTATION_90:
+		case ROTATION_270:
+		case TILEFLAG_HFLIP^ROTATION_90:
+		case TILEFLAG_HFLIP^ROTATION_270:
+			return CANTMOVE_LEFT|CANTMOVE_RIGHT;
+		}
+		break;
+	case TILE_STOPA:
+		return CANTMOVE_LEFT|CANTMOVE_RIGHT|CANTMOVE_UP|CANTMOVE_DOWN;
+	}
+	return 0;
+}
+
+static int GetMoveRestrictionsMask(int Direction)
+{
+	switch(Direction)
+	{
+	case MR_DIR_HERE: return 0;
+	case MR_DIR_RIGHT: return CANTMOVE_RIGHT;
+	case MR_DIR_DOWN: return CANTMOVE_DOWN;
+	case MR_DIR_LEFT: return CANTMOVE_LEFT;
+	case MR_DIR_UP: return CANTMOVE_UP;
+	default: dbg_assert(false, "invalid dir");
+	}
+	return 0;
+}
+
+static int GetMoveRestrictions(int Direction, int Tile, int Flags)
+{
+	int Result = GetMoveRestrictionsRaw(Direction, Tile, Flags);
+	// Generally, stoppers only have an effect if they block us from moving
+	// *onto* them. The one exception is one-way blockers, they can also
+	// block us from moving if we're on top of them.
+	if(Direction == MR_DIR_HERE && Tile == TILE_STOP)
+	{
+		return Result;
+	}
+	return Result&GetMoveRestrictionsMask(Direction);
+}
+
+int CCollision::GetMoveRestrictions(CALLBACK_SWITCHACTIVE pfnSwitchActive, void *pUser, vec2 Pos, float Distance, int OverrideCenterTileIndex)
+{
+	static const vec2 DIRECTIONS[NUM_MR_DIRS] =
+	{
+		vec2(0, 0),
+		vec2(1, 0),
+		vec2(0, 1),
+		vec2(-1, 0),
+		vec2(0, -1)
+	};
+	dbg_assert(0.0f <= Distance && Distance <= 32.0f, "invalid distance");
+	int Restrictions = 0;
+	for(int d = 0; d < NUM_MR_DIRS; d++)
+	{
+		vec2 ModPos = Pos + DIRECTIONS[d] * Distance;
+		int ModMapIndex = GetPureMapIndex(ModPos);
+		if(d == MR_DIR_HERE && OverrideCenterTileIndex >= 0)
+		{
+			ModMapIndex = OverrideCenterTileIndex;
+		}
+		for(int Front = 0; Front < 2; Front++)
+		{
+			int Tile;
+			int Flags;
+			if(!Front)
+			{
+				Tile = GetTileIndex(ModMapIndex);
+				Flags = GetTileFlags(ModMapIndex);
+			}
+			else
+			{
+				Tile = GetFTileIndex(ModMapIndex);
+				Flags = GetFTileFlags(ModMapIndex);
+			}
+			Restrictions |= ::GetMoveRestrictions(d, Tile, Flags);
+		}
+		if(pfnSwitchActive)
+		{
+			int TeleNumber = GetDTileNumber(ModMapIndex);
+			if(pfnSwitchActive(TeleNumber, pUser))
+			{
+				int Tile = GetDTileIndex(ModMapIndex);
+				int Flags = GetDTileFlags(ModMapIndex);
+				Restrictions |= ::GetMoveRestrictions(d, Tile, Flags);
+			}
+		}
+	}
+	return Restrictions;
 }
 
 int CCollision::GetTile(int x, int y) const
@@ -277,6 +425,48 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 // DDRace
 
+void CCollision::SetCollisionAt(float x, float y, int id)
+{
+	int Nx = clamp(round_to_int(x)/32, 0, m_Width-1);
+	int Ny = clamp(round_to_int(y)/32, 0, m_Height-1);
+
+	m_pTiles[Ny * m_Width + Nx].m_Index = id;
+}
+
+void CCollision::SetDCollisionAt(float x, float y, int Type, int Flags, int Number)
+{
+	if(!m_pDoor)
+		return;
+	int Nx = clamp(round_to_int(x)/32, 0, m_Width-1);
+	int Ny = clamp(round_to_int(y)/32, 0, m_Height-1);
+
+	m_pDoor[Ny * m_Width + Nx].m_Index = Type;
+	m_pDoor[Ny * m_Width + Nx].m_Flags = Flags;
+	m_pDoor[Ny * m_Width + Nx].m_Number = Number;
+}
+
+int CCollision::GetDTileIndex(int Index)
+{
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index)
+		return 0;
+	return m_pDoor[Index].m_Index;
+}
+
+int CCollision::GetDTileNumber(int Index)
+{
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index)
+		return 0;
+	if(m_pDoor[Index].m_Number) return m_pDoor[Index].m_Number;
+	return 0;
+}
+
+int CCollision::GetDTileFlags(int Index)
+{
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index)
+		return 0;
+	return m_pDoor[Index].m_Flags;
+}
+
 int CCollision::IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr)
 {
 	float Distance = distance(Pos0, Pos1);
@@ -339,6 +529,98 @@ int CCollision::GetPureMapIndex(float x, float y)
 	int Nx = clamp(round_to_int(x)/32, 0, m_Width-1);
 	int Ny = clamp(round_to_int(y)/32, 0, m_Height-1);
 	return Ny*m_Width+Nx;
+}
+
+bool CCollision::TileExists(int Index)
+{
+	if(Index < 0)
+		return false;
+
+	if(m_pTiles[Index].m_Index >= TILE_FREEZE && m_pTiles[Index].m_Index <= TILE_TELE_LASER_DISABLE)
+		return true;
+	if(m_pFront && m_pFront[Index].m_Index >= TILE_FREEZE && m_pFront[Index].m_Index  <= TILE_TELE_LASER_DISABLE)
+		return true;
+	if(m_pTele && (m_pTele[Index].m_Type == TILE_TELEIN || m_pTele[Index].m_Type == TILE_TELEINEVIL || m_pTele[Index].m_Type == TILE_TELECHECKINEVIL ||m_pTele[Index].m_Type == TILE_TELECHECK || m_pTele[Index].m_Type == TILE_TELECHECKIN))
+		return true;
+	if(m_pSpeedup && m_pSpeedup[Index].m_Force > 0)
+		return true;
+	if(m_pDoor && m_pDoor[Index].m_Index)
+		return true;
+	if(m_pSwitch && m_pSwitch[Index].m_Type)
+		return true;
+	if(m_pTune && m_pTune[Index].m_Type)
+			return true;
+	return TileExistsNext(Index);
+}
+
+bool CCollision::TileExistsNext(int Index)
+{
+	if(Index < 0)
+		return false;
+	int TileOnTheLeft = (Index - 1 > 0) ? Index - 1 : Index;
+	int TileOnTheRight = (Index + 1 < m_Width * m_Height) ? Index + 1 : Index;
+	int TileBelow = (Index + m_Width < m_Width * m_Height) ? Index + m_Width : Index;
+	int TileAbove = (Index - m_Width > 0) ? Index - m_Width : Index;
+
+	if((m_pTiles[TileOnTheRight].m_Index == TILE_STOP && m_pTiles[TileOnTheRight].m_Flags == ROTATION_270) || (m_pTiles[TileOnTheLeft].m_Index == TILE_STOP && m_pTiles[TileOnTheLeft].m_Flags == ROTATION_90))
+		return true;
+	if((m_pTiles[TileBelow].m_Index == TILE_STOP && m_pTiles[TileBelow].m_Flags == ROTATION_0) || (m_pTiles[TileAbove].m_Index == TILE_STOP && m_pTiles[TileAbove].m_Flags == ROTATION_180))
+		return true;
+	if(m_pTiles[TileOnTheRight].m_Index == TILE_STOPA || m_pTiles[TileOnTheLeft].m_Index == TILE_STOPA || ((m_pTiles[TileOnTheRight].m_Index == TILE_STOPS || m_pTiles[TileOnTheLeft].m_Index == TILE_STOPS) && m_pTiles[TileOnTheRight].m_Flags|ROTATION_270|ROTATION_90))
+		return true;
+	if(m_pTiles[TileBelow].m_Index == TILE_STOPA || m_pTiles[TileAbove].m_Index == TILE_STOPA || ((m_pTiles[TileBelow].m_Index == TILE_STOPS || m_pTiles[TileAbove].m_Index == TILE_STOPS) && m_pTiles[TileBelow].m_Flags|ROTATION_180|ROTATION_0))
+		return true;
+	if(m_pFront)
+	{
+		if(m_pFront[TileOnTheRight].m_Index == TILE_STOPA || m_pFront[TileOnTheLeft].m_Index == TILE_STOPA || ((m_pFront[TileOnTheRight].m_Index == TILE_STOPS || m_pFront[TileOnTheLeft].m_Index == TILE_STOPS) && m_pFront[TileOnTheRight].m_Flags|ROTATION_270|ROTATION_90))
+			return true;
+		if(m_pFront[TileBelow].m_Index == TILE_STOPA || m_pFront[TileAbove].m_Index == TILE_STOPA || ((m_pFront[TileBelow].m_Index == TILE_STOPS || m_pFront[TileAbove].m_Index == TILE_STOPS) && m_pFront[TileBelow].m_Flags|ROTATION_180|ROTATION_0))
+			return true;
+		if((m_pFront[TileOnTheRight].m_Index == TILE_STOP && m_pFront[TileOnTheRight].m_Flags == ROTATION_270) || (m_pFront[TileOnTheLeft].m_Index == TILE_STOP && m_pFront[TileOnTheLeft].m_Flags == ROTATION_90))
+			return true;
+		if((m_pFront[TileBelow].m_Index == TILE_STOP && m_pFront[TileBelow].m_Flags == ROTATION_0) || (m_pFront[TileAbove].m_Index == TILE_STOP && m_pFront[TileAbove].m_Flags == ROTATION_180))
+			return true;
+	}
+	if(m_pDoor)
+	{
+		if(m_pDoor[TileOnTheRight].m_Index == TILE_STOPA || m_pDoor[TileOnTheLeft].m_Index == TILE_STOPA || ((m_pDoor[TileOnTheRight].m_Index == TILE_STOPS || m_pDoor[TileOnTheLeft].m_Index == TILE_STOPS) && m_pDoor[TileOnTheRight].m_Flags|ROTATION_270|ROTATION_90))
+			return true;
+		if(m_pDoor[TileBelow].m_Index == TILE_STOPA || m_pDoor[TileAbove].m_Index == TILE_STOPA || ((m_pDoor[TileBelow].m_Index == TILE_STOPS || m_pDoor[TileAbove].m_Index == TILE_STOPS) && m_pDoor[TileBelow].m_Flags|ROTATION_180|ROTATION_0))
+			return true;
+		if((m_pDoor[TileOnTheRight].m_Index == TILE_STOP && m_pDoor[TileOnTheRight].m_Flags == ROTATION_270) || (m_pDoor[TileOnTheLeft].m_Index == TILE_STOP && m_pDoor[TileOnTheLeft].m_Flags == ROTATION_90))
+			return true;
+		if((m_pDoor[TileBelow].m_Index == TILE_STOP && m_pDoor[TileBelow].m_Flags == ROTATION_0) || (m_pDoor[TileAbove].m_Index == TILE_STOP && m_pDoor[TileAbove].m_Flags == ROTATION_180))
+			return true;
+	}
+	return false;
+}
+
+int CCollision::GetTileIndex(int Index)
+{
+	if(Index < 0)
+		return 0;
+	return m_pTiles[Index].m_Index;
+}
+
+int CCollision::GetFTileIndex(int Index)
+{
+	if(Index < 0 || !m_pFront)
+		return 0;
+	return m_pFront[Index].m_Index;
+}
+
+int CCollision::GetTileFlags(int Index)
+{
+	if(Index < 0)
+		return 0;
+	return m_pTiles[Index].m_Flags;
+}
+
+int CCollision::GetFTileFlags(int Index)
+{
+	if(Index < 0 || !m_pFront)
+		return 0;
+	return m_pFront[Index].m_Flags;
 }
 
 int CCollision::IsTeleport(int Index)

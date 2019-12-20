@@ -184,8 +184,15 @@ public:
 	vec2 m_HookTeleBase;
 	bool m_NewHook;
 
+	// Caps the given velocity according to the current set of stoppers
+	// that the character is affected by.
+	vec2 LimitVel(vec2 Vel);
+	void ApplyForce(vec2 Force);
+
 private:
 	std::map<int, std::vector<vec2> > *m_pTeleOuts;
+	int m_MoveRestrictions;
+	static bool IsSwitchActiveCb(int Number, void *pUser);
 };
 
 #endif

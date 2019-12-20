@@ -7,6 +7,20 @@
 #include <engine/shared/protocol.h>
 #include <game/mapitems.h>
 
+#include <list>
+
+enum
+{
+	CANTMOVE_LEFT=1<<0,
+	CANTMOVE_RIGHT=1<<1,
+	CANTMOVE_UP=1<<2,
+	CANTMOVE_DOWN=1<<3,
+};
+
+vec2 ClampVel(int MoveRestriction, vec2 Vel);
+
+typedef bool (*CALLBACK_SWITCHACTIVE)(int Number, void *pUser);
+
 class CCollision
 {
 	class CTile *m_pTiles;
@@ -39,10 +53,38 @@ public:
 
 	// DDRace
 
+	// void Dest();
+	void SetCollisionAt(float x, float y, int id);
+	void SetDTile(float x, float y, bool State);
+	void SetDCollisionAt(float x, float y, int Type, int Flags, int Number);
+	int GetDTileIndex(int Index);
+	int GetDTileFlags(int Index);
+	int GetDTileNumber(int Index);
+
 	int IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr);
 
 	int GetPureMapIndex(float x, float y);
 	int GetPureMapIndex(vec2 Pos) { return GetPureMapIndex(Pos.x, Pos.y); }
+
+	int GetMoveRestrictions(CALLBACK_SWITCHACTIVE pfnSwitchActive, void *pUser, vec2 Pos, float Distance = 18.0f, int OverrideCenterTileIndex = -1);
+	int GetMoveRestrictions(vec2 Pos, float Distance = 18.0f)
+	{
+		return GetMoveRestrictions(0, 0, Pos, Distance);
+	}
+
+	// int GetTile(int x, int y);
+	// int GetFTile(int x, int y);
+	// int Entity(int x, int y, int Layer);
+	// std::list<int> GetMapIndices(vec2 PrevPos, vec2 Pos, unsigned MaxIndices = 0);
+	// int GetMapIndex(vec2 Pos);
+	bool TileExists(int Index);
+	bool TileExistsNext(int Index);
+	// vec2 GetPos(int Index);
+	int GetTileIndex(int Index);
+	int GetFTileIndex(int Index);
+	int GetTileFlags(int Index);
+	int GetFTileFlags(int Index);
+
 	int IsTeleport(int Index);
 	int IsEvilTeleport(int Index);
 	int IsCheckTeleport(int Index);

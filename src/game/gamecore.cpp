@@ -85,6 +85,7 @@ void CCharacterCore::Reset()
 void CCharacterCore::Tick(bool UseInput)
 {
 	float PhysSize = 28.0f;
+	m_MoveRestrictions = m_pCollision->GetMoveRestrictions(UseInput ? IsSwitchActiveCb : 0, this, m_Pos);
 	m_TriggeredEvents = 0;
 
 	// get ground state
@@ -357,13 +358,15 @@ void CCharacterCore::Tick(bool UseInput)
 					float Accel = m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookDragAccel * (Distance/m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength);
 					float DragSpeed = m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookDragSpeed;
 
+					vec2 Temp;
 					// add force to the hooked player
-					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
-					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
-
+					Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
+					Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
+					pCharCore->m_Vel = ClampVel(pCharCore->m_MoveRestrictions, Temp);
 					// add a little bit force to the guy who has the grip
-					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
-					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
+					Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					m_Vel = ClampVel(m_MoveRestrictions, Temp);
 				}
 			}
 		}
@@ -373,6 +376,8 @@ void CCharacterCore::Tick(bool UseInput)
 			m_NewHook = false;
 		}
 	}
+	// TODO: why is this line not in ddnet?
+	m_Vel = ClampVel(m_MoveRestrictions, m_Vel);
 
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
@@ -470,3 +475,26 @@ void CCharacterCore::Quantize()
 	Read(&Core);
 }
 
+// DDRace
+
+bool CCharacterCore::IsSwitchActiveCb(int Number, void *pUser)
+{
+	/*
+	// TODO: team info
+	CCharacterCore *pThis = (CCharacterCore *)pUser;
+	if(pThis->Collision()->m_pSwitchers)
+		if(pThis->m_pTeams->Team(pThis->m_Id) != (pThis->m_pTeams->m_IsDDRace16 ? VANILLA_TEAM_SUPER : TEAM_SUPER))
+			return pThis->Collision()->m_pSwitchers[Number].m_Status[pThis->m_pTeams->Team(pThis->m_Id)];
+	*/
+	return false;
+}
+
+vec2 CCharacterCore::LimitVel(vec2 Vel)
+{
+	return ClampVel(m_MoveRestrictions, Vel);
+}
+
+void CCharacterCore::ApplyForce(vec2 Force)
+{
+	m_Vel = LimitVel(m_Vel + Force);
+}
