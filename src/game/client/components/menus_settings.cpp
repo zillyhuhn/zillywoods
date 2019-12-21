@@ -1171,7 +1171,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	// render game menu backgrounds
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
-	float BackgroundHeight = 2.0f*ButtonHeight+Spacing;
+	float BackgroundHeight = 4.2f*ButtonHeight+Spacing;
 
 	MainView.HSplitBottom(80.0f, &MainView, 0); // now we have the total rect for the settings#
 	if(this->Client()->State() == IClient::STATE_ONLINE)
@@ -1203,6 +1203,22 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	Right.HSplitTop(ButtonHeight, &Button, &Right);
 	static float s_OffsetClan = 0.0f;
 	DoEditBoxOption(g_Config.m_PlayerClan, g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan), &Button, Localize("Clan"),  100.0f, &s_OffsetClan);
+
+	Label.y += ButtonHeight * 2.0f;
+	float LabelHeight = ButtonHeight*ms_FontmodHeight*0.8f;
+	UI()->DoLabel(&Label, Localize("Dummy"), LabelHeight, CUI::ALIGN_CENTER);
+	Left.HSplitTop(LabelHeight+Spacing, &Button, &Left);
+	Right.HSplitTop(LabelHeight+Spacing, &Button, &Right);
+
+	// left menu
+	Left.HSplitTop(ButtonHeight, &Button, &Left);
+	static float s_OffsetDummyName = 0.0f;
+	DoEditBoxOption(g_Config.m_DummyName, g_Config.m_DummyName, sizeof(g_Config.m_DummyName), &Button, Localize("Name"),  100.0f, &s_OffsetDummyName);
+
+	// right menu
+	Right.HSplitTop(ButtonHeight, &Button, &Right);
+	static float s_OffsetDummyClan = 0.0f;
+	DoEditBoxOption(g_Config.m_DummyClan, g_Config.m_DummyClan, sizeof(g_Config.m_DummyClan), &Button, Localize("Clan"),  100.0f, &s_OffsetDummyClan);
 
 	// country flag selector
 	MainView.HSplitTop(10.0f, 0, &MainView);
