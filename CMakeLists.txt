@@ -1125,6 +1125,7 @@ set(EXPECTED_DATA
   ui/gametypes/lms.png
   ui/gametypes/lts.png
   ui/gametypes/mod.png
+  ui/gametypes/race.png
   ui/gametypes/tdm.png
   ui/gui_buttons.png
   ui/gui_cursor.png
@@ -1132,6 +1133,7 @@ set(EXPECTED_DATA
   ui/gui_logo.png
   ui/icons/arrows.png
   ui/icons/browse.png
+  ui/icons/browser.png
   ui/icons/chat_whisper.png
   ui/icons/friend.png
   ui/icons/level.png
