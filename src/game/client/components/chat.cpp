@@ -510,6 +510,26 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 		AddLine(pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_pMessage, pMsg->m_TargetID);
 		OnMessageZilly(pMsg->m_ClientID, pMsg->m_pMessage);
 	}
+	else if(MsgType == NETMSGTYPE_SV_COMMANDINFO)
+	{
+		CNetMsg_Sv_CommandInfo *pMsg = (CNetMsg_Sv_CommandInfo *)pRawMsg;
+		if(!m_Commands.GetCommandByName(pMsg->m_pName))
+		{
+			dbg_msg("chat_commands", "adding server chat command: name='%s' args='%s' help='%s'", pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText);
+			m_Commands.AddCommand(pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText, 0);
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_COMMANDINFOREMOVE)
+	{
+		CNetMsg_Sv_CommandInfoRemove *pMsg = (CNetMsg_Sv_CommandInfoRemove *)pRawMsg;
+		
+		CChatCommand *pCommand = m_Commands.GetCommandByName(pMsg->m_pName);
+
+		if(pCommand) {
+			mem_zero(pCommand, sizeof(CChatCommand));
+			dbg_msg("chat_commands", "removed chat command: name='%s'", pMsg->m_pName);
+		}
+	}
 }
 
 void CChat::PlaySoundServer()
@@ -539,26 +559,6 @@ void CChat::PlaySoundClient()
 	{
 		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
 		m_aLastSoundPlayed[CHAT_CLIENT] = Now;
-	}
-	else if(MsgType == NETMSGTYPE_SV_COMMANDINFO)
-	{
-		CNetMsg_Sv_CommandInfo *pMsg = (CNetMsg_Sv_CommandInfo *)pRawMsg;
-		if(!m_Commands.GetCommandByName(pMsg->m_pName))
-		{
-			dbg_msg("chat_commands", "adding server chat command: name='%s' args='%s' help='%s'", pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText);
-			m_Commands.AddCommand(pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText, 0);
-		}
-	}
-	else if(MsgType == NETMSGTYPE_SV_COMMANDINFOREMOVE)
-	{
-		CNetMsg_Sv_CommandInfoRemove *pMsg = (CNetMsg_Sv_CommandInfoRemove *)pRawMsg;
-		
-		CChatCommand *pCommand = m_Commands.GetCommandByName(pMsg->m_pName);
-
-		if(pCommand) {
-			mem_zero(pCommand, sizeof(CChatCommand));
-			dbg_msg("chat_commands", "removed chat command: name='%s'", pMsg->m_pName);
-		}
 	}
 }
 
