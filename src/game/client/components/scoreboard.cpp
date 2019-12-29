@@ -690,23 +690,23 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			}
 
 			// score
-			if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
+			if(Race)
 			{
-				if(pInfo->m_pPlayerInfo->m_Score == -9999)
-					aBuf[0] = 0;
-				else
-				{
-					int Time = abs(pInfo->m_pPlayerInfo->m_Score);
-					str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
-				}
+				aBuf[0] = 0;
+				if(pInfo->m_pPlayerInfo->m_Score >= 0)
+					FormatTime(aBuf, sizeof(aBuf), pInfo->m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
 			}
 			else
 			{
-				if(Race)
+				if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
 				{
-					aBuf[0] = 0;
-					if(pInfo->m_pPlayerInfo->m_Score >= 0)
-						FormatTime(aBuf, sizeof(aBuf), pInfo->m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
+					if(pInfo->m_pPlayerInfo->m_Score == -9999)
+						aBuf[0] = 0;
+					else
+					{
+						int Time = abs(pInfo->m_pPlayerInfo->m_Score);
+						str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
+					}
 				}
 				else
 				{
