@@ -710,7 +710,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				}
 				else
 				{
-					str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 999));
+					str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_pPlayerInfo->m_Score, -999, 9999));
 				}
 			}
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
