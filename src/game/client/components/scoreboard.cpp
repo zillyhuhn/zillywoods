@@ -329,7 +329,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			str_format(aBuf, sizeof(aBuf), "%s (%d)", pTitle, NumPlayers);
 	}
 
-	if(Race)
+	if(Race && (m_pClient->m_GameInfo.m_aTeamSize[0] <= 16 || (upper16 || upper24 || upper32)))
 	{
 		if(m_pClient->m_Snap.m_pGameDataRace && Team != TEAM_BLUE)
 		{
