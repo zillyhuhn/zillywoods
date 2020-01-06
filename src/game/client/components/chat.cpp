@@ -243,7 +243,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
-		if(IsTypingCommand() && ExecuteCommand())
+		if(IsTypingCommand() && ExecuteCommand(true))
 		{
 			// everything is handled within
 		}
@@ -278,7 +278,11 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
-		if (m_Mode == CHAT_WHISPER)
+		if(IsTypingCommand() && ExecuteCommand(false))
+		{
+			// everything is handled within
+		}
+		else if (m_Mode == CHAT_WHISPER)
 		{
 			// change target
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1364,7 +1368,10 @@ void CChat::HandleCommands(float x, float y, float w)
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
-				TextRender()->TextEx(&Cursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
+				if(m_Commands.GetSelectedCommand() && str_startswith(m_Input.GetString() + 1, m_Commands.GetSelectedCommand()->m_aName))
+					TextRender()->TextEx(&Cursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
+				else
+					TextRender()->TextEx(&Cursor, Localize("Press Tab to select or Esc to cancel"), -1);
 			}
 
 			// render commands
@@ -1422,7 +1429,7 @@ void CChat::HandleCommands(float x, float y, float w)
 	}
 }
 
-bool CChat::ExecuteCommand()
+bool CChat::ExecuteCommand(bool Execute)
 {
 	if(m_Commands.CountActiveCommands() == 0)
 		return false;
@@ -1432,7 +1439,7 @@ bool CChat::ExecuteCommand()
 	dbg_assert(pCommand != 0, "selected command does not exist");
 	bool IsFullMatch = str_find(pCommandStr + 1, pCommand->m_aName); // if the command text is fully inside pCommandStr (aka, not a shortcut)
 
-	if(IsFullMatch)
+	if(IsFullMatch && Execute)
 	{
 		// execute command
 		if(pCommand->m_pfnCallback)
@@ -1445,9 +1452,11 @@ bool CChat::ExecuteCommand()
 			Msg.m_Arguments = pCommandStr;
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 			m_Mode = CHAT_NONE;
+			m_pClient->OnRelease();
 		}
+		return true;
 	}
-	else
+	else if(!IsFullMatch && !Execute)
 	{
 		// autocomplete command
 		char aBuf[128];
@@ -1458,8 +1467,9 @@ bool CChat::ExecuteCommand()
 		m_Input.Set(aBuf);
 		m_Input.SetCursorOffset(str_length(aBuf));
 		m_InputUpdate = true;
+		return true;
 	}
-	return true;
+	return false;
 }
 
 // returns -1 if not found or duplicate
@@ -1569,6 +1579,7 @@ void CChat::Com_Mute(CChat *pChatData, const char* pCommand)
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 	pChatData->m_Mode = CHAT_NONE;
+	pChatData->m_pClient->OnRelease();
 }
 
 void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
@@ -1590,6 +1601,7 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 	pChatData->m_Mode = CHAT_NONE;
+	pChatData->m_pClient->OnRelease();
 }
 
 
