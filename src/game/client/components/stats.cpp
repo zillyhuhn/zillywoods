@@ -277,19 +277,15 @@ void CStats::OnRender()
 		TeeSizemod = 0.8f;
 		TeeOffset = -5.0f;
 	}
+	if(NumPlayers > 16)
+	{
+		FontSize = 15.0f;
+		LineHeight = 25.0f;
+		TeeSizemod = 0.4f;
+		TeeOffset = -14.0f;
+	}
 	for(int j=0; j<NumPlayers; j++)
 	{
-		// workaround
-		if(j == 16)
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "... %d other players", NumPlayers-j);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x+64, y, FontSize, aBuf, -1.0f);
-			px += 100;
-			break;
-		}
-
 		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
 		const bool HighlightedLine = apPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
@@ -298,7 +294,7 @@ void CStats::OnRender()
 		if(HighlightedLine)
 		{
 			CUIRect Rect = {x, y, w-20, LineHeight*0.95f};
-			RenderTools()->DrawRoundRect(&Rect, vec4(1,1,1,0.25f), 17.0f);
+			RenderTools()->DrawRoundRect(&Rect, vec4(1,1,1,0.25f), NumPlayers > 16 ? 5.0f : 17.0f);
 		}
 
 		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[apPlayers[j]].m_RenderInfo;
