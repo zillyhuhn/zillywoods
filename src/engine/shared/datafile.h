@@ -9,7 +9,7 @@
 class CDataFileReader
 {
 	struct CDatafile *m_pDataFile;
-	void *GetDataImpl(int Index, int Swap);
+	void *GetDataImpl(int Index, int Swap, const char *pType = 0);
 	int GetFileDataSize(int Index) const;
 public:
 	CDataFileReader() : m_pDataFile(0) {}
@@ -20,8 +20,8 @@ public:
 	bool Open(class IStorage *pStorage, const char *pFilename, int StorageType);
 	bool Close();
 
-	void *GetData(int Index);
-	void *GetDataSwapped(int Index); // makes sure that the data is 32bit LE ints when saved
+	void *GetData(int Index, const char *pType = 0);
+	void *GetDataSwapped(int Index, const char *pType = 0); // makes sure that the data is 32bit LE ints when saved
 	int GetDataSize(int Index) const;
 	void ReplaceData(int Index, char *pData);
 	void UnloadData(int Index);

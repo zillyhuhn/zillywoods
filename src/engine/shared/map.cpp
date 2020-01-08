@@ -12,9 +12,9 @@ class CMap : public IEngineMap
 public:
 	CMap() {}
 
-	virtual void *GetData(int Index) { return m_DataFile.GetData(Index); }
+	virtual void *GetData(int Index, const char *pType = "[CMap::GetData] ") { return m_DataFile.GetData(Index, pType); }
 	virtual int GetDataSize(int Index) { return m_DataFile.GetDataSize(Index); }
-	virtual void *GetDataSwapped(int Index) { return m_DataFile.GetDataSwapped(Index); }
+	virtual void *GetDataSwapped(int Index, const char *pType = "[CMap::GetDataSwapped] ") { return m_DataFile.GetDataSwapped(Index, pType); }
 	virtual void UnloadData(int Index) { m_DataFile.UnloadData(Index); }
 	virtual void *GetItem(int Index, int *pType, int *pID) { return m_DataFile.GetItem(Index, pType, pID); }
 	virtual void GetType(int Type, int *pStart, int *pNum) { m_DataFile.GetType(Type, pStart, pNum); }
@@ -70,7 +70,7 @@ public:
 
 						// extract original tile data
 						int i = 0;
-						CTile *pSavedTiles = static_cast<CTile *>(m_DataFile.GetData(pTilemap->m_Data));
+						CTile *pSavedTiles = static_cast<CTile *>(m_DataFile.GetData(pTilemap->m_Data, "[CMap::Load] "));
 						while(i < TilemapCount)
 						{
 							for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < TilemapCount; Counter++)

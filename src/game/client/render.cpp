@@ -636,7 +636,7 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
 				CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
-				CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTmap->m_Data);
+				CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTmap->m_Data, "[CRenderTools::RenderTilemapGenerateSkip] ");
 				for(int y = 0; y < pTmap->m_Height; y++)
 				{
 					for(int x = 1; x < pTmap->m_Width;)

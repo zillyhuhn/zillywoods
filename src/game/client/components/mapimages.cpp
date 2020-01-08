@@ -52,13 +52,13 @@ void CMapImages::LoadMapImages(IMap *pMap, class CLayers *pLayers, int MapType)
 		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
 		{
 			char Buf[256];
-			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
+			char *pName = (char *)pMap->GetData(pImg->m_ImageName, "[CMapImages::LoadMapImages] ");
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
 			m_Info[MapType].m_aTextures[i] = Graphics()->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, TextureFlags);
 		}
 		else
 		{
-			void *pData = pMap->GetData(pImg->m_ImageData);
+			void *pData = pMap->GetData(pImg->m_ImageData, "[CMapImages::LoadMapImages] ");
 			m_Info[MapType].m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData, CImageInfo::FORMAT_RGBA, TextureFlags);
 			pMap->UnloadData(pImg->m_ImageData);
 		}

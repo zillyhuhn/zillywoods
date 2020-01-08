@@ -10,9 +10,9 @@ class IMap : public IInterface
 {
 	MACRO_INTERFACE("map", 0)
 public:
-	virtual void *GetData(int Index) = 0;
+	virtual void *GetData(int Index, const char *pType) = 0;
 	virtual int GetDataSize(int Index) = 0;
-	virtual void *GetDataSwapped(int Index) = 0;
+	virtual void *GetDataSwapped(int Index, const char *pType) = 0;
 	virtual void UnloadData(int Index) = 0;
 	virtual void *GetItem(int Index, int *Type, int *pID) = 0;
 	virtual void GetType(int Type, int *pStart, int *pNum) = 0;

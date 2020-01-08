@@ -157,7 +157,7 @@ void CMapLayers::OnMapLoad()
 		m_EggLayerHeight = pGameLayer->m_Height;
 		m_pEggTiles = (CTile*)mem_alloc(sizeof(CTile) * m_EggLayerWidth * m_EggLayerHeight,1);
 		mem_zero(m_pEggTiles, sizeof(CTile) * m_EggLayerWidth * m_EggLayerHeight);
-		CTile* aGameLayerTiles = (CTile*)Layers()->Map()->GetData(pGameLayer->m_Data);
+		CTile* aGameLayerTiles = (CTile*)Layers()->Map()->GetData(pGameLayer->m_Data, "[CMapLayers::OnMapLoad] ");
 
 		// first pass: baskets
 		static const int s_aBasketIDs[] = {
@@ -456,7 +456,7 @@ void CMapLayers::OnRender()
 				if(pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_KP_0))
 				{
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
-					CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data);
+					CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data, "[CMapLayers::OnRender] ");
 					CServerInfo CurrentServerInfo;
 					Client()->GetServerInfo(&CurrentServerInfo);
 					char aFilename[256];
@@ -487,7 +487,7 @@ void CMapLayers::OnRender()
 						else
 							Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
 
-						CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data);
+						CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data, "[CMapLayers::OnRender] ");
 						Graphics()->BlendNone();
 						vec4 Color = vec4(pTMap->m_Color.r/255.0f, pTMap->m_Color.g/255.0f, pTMap->m_Color.b/255.0f, pTMap->m_Color.a/255.0f);
 						if(IsGameLayer && g_Config.m_ClOverlayEntities)
@@ -508,7 +508,7 @@ void CMapLayers::OnRender()
 						else
 							Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pQLayer->m_Image));
 
-						CQuad *pQuads = (CQuad *)pLayers->Map()->GetDataSwapped(pQLayer->m_Data);
+						CQuad *pQuads = (CQuad *)pLayers->Map()->GetDataSwapped(pQLayer->m_Data, "[CMapLayers::OnRender] ");
 
 						//Graphics()->BlendNone();
 						//RenderTools()->RenderQuads(pQuads, pQLayer->m_NumQuads, LAYERRENDERFLAG_OPAQUE, EnvelopeEval, this);
@@ -521,7 +521,7 @@ void CMapLayers::OnRender()
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntitiesTexture());
 
-					CTile *pFrontTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Front);
+					CTile *pFrontTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Front, "[CMapLayers::OnRender] ");
 					unsigned int Size = pLayers->Map()->GetDataSize(pTMap->m_Front);
 
 					if(Size >= pTMap->m_Width*pTMap->m_Height*sizeof(CTile))
@@ -542,7 +542,7 @@ void CMapLayers::OnRender()
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntitiesTexture());
 
-					CSwitchTile *pSwitchTiles = (CSwitchTile *)pLayers->Map()->GetData(pTMap->m_Switch);
+					CSwitchTile *pSwitchTiles = (CSwitchTile *)pLayers->Map()->GetData(pTMap->m_Switch, "[CMapLayers::OnRender] ");
 					unsigned int Size = pLayers->Map()->GetDataSize(pTMap->m_Switch);
 
 					if(Size >= pTMap->m_Width*pTMap->m_Height*sizeof(CSwitchTile))
@@ -562,7 +562,7 @@ void CMapLayers::OnRender()
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntitiesTexture());
 
-					CTeleTile *pTeleTiles = (CTeleTile *)pLayers->Map()->GetData(pTMap->m_Tele);
+					CTeleTile *pTeleTiles = (CTeleTile *)pLayers->Map()->GetData(pTMap->m_Tele, "[CMapLayers::OnRender] ");
 					unsigned int Size = pLayers->Map()->GetDataSize(pTMap->m_Tele);
 
 					if(Size >= pTMap->m_Width*pTMap->m_Height*sizeof(CTeleTile))
@@ -582,7 +582,7 @@ void CMapLayers::OnRender()
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntitiesTexture());
 
-					CSpeedupTile *pSpeedupTiles = (CSpeedupTile *)pLayers->Map()->GetData(pTMap->m_Speedup);
+					CSpeedupTile *pSpeedupTiles = (CSpeedupTile *)pLayers->Map()->GetData(pTMap->m_Speedup, "[CMapLayers::OnRender] ");
 					unsigned int Size = pLayers->Map()->GetDataSize(pTMap->m_Speedup);
 
 					if(Size >= pTMap->m_Width*pTMap->m_Height*sizeof(CSpeedupTile))
@@ -602,7 +602,7 @@ void CMapLayers::OnRender()
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntitiesTexture());
 
-					CTuneTile *pTuneTiles = (CTuneTile *)pLayers->Map()->GetData(pTMap->m_Tune);
+					CTuneTile *pTuneTiles = (CTuneTile *)pLayers->Map()->GetData(pTMap->m_Tune, "[CMapLayers::OnRender] ");
 					unsigned int Size = pLayers->Map()->GetDataSize(pTMap->m_Tune);
 
 					if(Size >= pTMap->m_Width*pTMap->m_Height*sizeof(CTuneTile))
