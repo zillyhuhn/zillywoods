@@ -1270,3 +1270,29 @@ int CEditor::PopupSwitch(CEditor *pEditor, CUIRect View)
 
 	return 0;
 }
+
+int CEditor::PopupTune(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+
+	enum
+	{
+		PROP_TUNE=0,
+		NUM_PROPS,
+	};
+
+	CProperty aProps[] = {
+		{"Zone", pEditor->m_TuningNum, PROPTYPE_INT_STEP, 1, 255},
+		{0},
+	};
+
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+
+	if(Prop == PROP_TUNE)
+		pEditor->m_TuningNum = (NewVal - 1 + 255) % 255 + 1;
+
+	return 0;
+}

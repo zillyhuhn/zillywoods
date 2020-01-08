@@ -65,14 +65,16 @@ enum
 	ENTITY_PLASMA,
 	ENTITY_PLASMAU,
 	//DDRace - Shotgun
-	ENTITY_CRAZY_SHOTGUN_U_EX,
-	ENTITY_CRAZY_SHOTGUN_R_EX,
-	ENTITY_CRAZY_SHOTGUN_D_EX,
-	ENTITY_CRAZY_SHOTGUN_L_EX,
-	ENTITY_CRAZY_SHOTGUN_U,
-	ENTITY_CRAZY_SHOTGUN_R,
-	ENTITY_CRAZY_SHOTGUN_D,
-	ENTITY_CRAZY_SHOTGUN_L,
+	ENTITY_CRAZY_SHOTGUN_U_EX, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_R_EX, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_D_EX, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_L_EX, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_U, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_R, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_D, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_L, // TODO: ZillyWoods remove
+	ENTITY_CRAZY_SHOTGUN_EX=33,
+	ENTITY_CRAZY_SHOTGUN,
 	//DDRace - Draggers
 	ENTITY_DRAGGER_WEAK=42,
 	ENTITY_DRAGGER_NORMAL,
@@ -104,6 +106,7 @@ enum
 	TILE_NOLASER,
 	TILE_THROUGH_CUT,
 	TILE_THROUGH,
+	TILE_JUMP,
 
 	TILEFLAG_VFLIP=1,
 	TILEFLAG_HFLIP=2,
@@ -115,13 +118,22 @@ enum
 
 	// DDRace
 
-	TILE_FREEZE=9,
+	TILE_FREEZE = 9,
 	TILE_TELEINEVIL,
 	TILE_UNFREEZE,
-	TILE_BOOSTS,
-
-	TILE_TELEINWEAPON=14,
+	TILE_DFREEZE,
+	TILE_DUNFREEZE,
+	TILE_TELEINWEAPON,
 	TILE_TELEINHOOK,
+	TILE_WALLJUMP = 16,
+	TILE_EHOOK_START,
+	TILE_EHOOK_END,
+	TILE_HIT_START,
+	TILE_HIT_END,
+	TILE_SOLO_START,
+	TILE_SOLO_END,
+
+	TILE_BOOSTS=12, // TODO: ZillyWoods remove
 
 	TILE_CP_D=64,
 	TILE_CP_U,
@@ -432,5 +444,15 @@ public:
 	unsigned char m_Number;
 	unsigned char m_Type;
 };
+
+
+bool IsValidGameTile(int Index);
+bool IsValidFrontTile(int Index);
+bool IsValidTeleTile(int Index);
+bool IsValidSpeedupTile(int Index);
+bool IsValidSwitchTile(int Index);
+bool IsValidTuneTile(int Index);
+bool IsValidEntity(int Index);
+bool IsRotatableTile(int Index);
 
 #endif

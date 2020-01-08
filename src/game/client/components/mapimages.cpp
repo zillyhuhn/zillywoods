@@ -157,6 +157,18 @@ IGraphics::CTextureHandle CMapImages::GetSwitchTexture()
 	return m_SwitchTexture;
 }
 
+IGraphics::CTextureHandle CMapImages::GetTuneTexture()
+{
+	if(!m_SwitchIsLoaded)
+	{
+		m_TuneTexture = Graphics()->LoadTexture("editor/tune.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_TuneTexture.IsValid())
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mapimages", "Failed to load tune.png");
+		m_SwitchIsLoaded = true;
+	}
+	return m_TuneTexture;
+}
+
 IGraphics::CTextureHandle CMapImages::Get(int Index) const
 {
 	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)

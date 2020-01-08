@@ -443,25 +443,45 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							MakeGameLayer(pTiles);
 							MakeGameGroup(pGroup);
 						}
-						else if(pTilemapItem->m_Flags&2)
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_TELE)
 						{
+							if(pTilemapItem->m_Version <= 2)
+								pTilemapItem->m_Tele = *((int*)(pTilemapItem) + 15);
+
 							pTiles = new CLayerTele(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeTeleLayer(pTiles);
 						}
-						else if(pTilemapItem->m_Flags&4)
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_SPEEDUP)
 						{
+							if(pTilemapItem->m_Version <= 2)
+								pTilemapItem->m_Speedup = *((int*)(pTilemapItem) + 16);
+
 							pTiles = new CLayerSpeedup(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeSpeedupLayer(pTiles);
 						}
-						else if(pTilemapItem->m_Flags&8)
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_FRONT)
 						{
+							if(pTilemapItem->m_Version <= 2)
+								pTilemapItem->m_Front = *((int*)(pTilemapItem) + 17);
+
 							pTiles = new CLayerFront(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeFrontLayer(pTiles);
 						}
-						else if(pTilemapItem->m_Flags&16)
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_SWITCH)
 						{
+							if(pTilemapItem->m_Version <= 2)
+								pTilemapItem->m_Switch = *((int*)(pTilemapItem) + 18);
+
 							pTiles = new CLayerSwitch(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeSwitchLayer(pTiles);
+						}
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_TUNE)
+						{
+							if(pTilemapItem->m_Version <= 2)
+								pTilemapItem->m_Tune = *((int*)(pTilemapItem) + 19);
+
+							pTiles = new CLayerTune(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							MakeTuneLayer(pTiles);
 						}
 						else
 						{
@@ -476,6 +496,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 						pGroup->AddLayer(pTiles);
 						void *pData = DataFile.GetData(pTilemapItem->m_Data);
+						unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
 						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
 
@@ -483,54 +504,53 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						if(pTilemapItem->m_Version >= 3)
 							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);
 
-						// get tile data
-						if(pTilemapItem->m_Version > 3)
-							pTiles->ExtractTiles((CTile *)pData);
-						else
-							mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
-						
-
-						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
-						{
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
-							{
-								if(pTiles->m_pTiles[i].m_Index)
-									pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
-							}
-						}
-
-						DataFile.UnloadData(pTilemapItem->m_Data);
-
 						if(pTiles->m_Tele)
 						{
 							void *pTeleData = DataFile.GetData(pTilemapItem->m_Tele);
-							mem_copy(((CLayerTele*)pTiles)->m_pTeleTile, pTeleData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
-
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Tele);
+							if (Size >= pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile))
 							{
-								dbg_msg("Tele","%d",((CLayerTiles*)pTiles)->m_pTiles[i].m_Index);
-								if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEIN)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEIN;
-								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEINEVIL)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEINEVIL;
-								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEOUT)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEOUT;
-								/*else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;*/
+								static const int s_aTilesRep[] = {
+									TILE_TELEIN,
+									TILE_TELEINEVIL,
+									TILE_TELEOUT,
+									TILE_TELECHECK,
+									TILE_TELECHECKIN,
+									TILE_TELECHECKINEVIL,
+									TILE_TELECHECKOUT,
+									TILE_TELEINWEAPON,
+									TILE_TELEINHOOK
+								};
+								mem_copy(((CLayerTele *)pTiles)->m_pTeleTile, pTeleData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
+
+								for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+								{
+									pTiles->m_pTiles[i].m_Index = 0;
+									for (unsigned e = 0; e < sizeof(s_aTilesRep) / sizeof(s_aTilesRep[0]); e++)
+									{
+										if (((CLayerTele *)pTiles)->m_pTeleTile[i].m_Type == s_aTilesRep[e])
+											pTiles->m_pTiles[i].m_Index = s_aTilesRep[e];
+									}
+								}
 							}
 							DataFile.UnloadData(pTilemapItem->m_Tele);
 						}
 						else if(pTiles->m_Speedup)
 						{
 							void *pSpeedupData = DataFile.GetData(pTilemapItem->m_Speedup);
-							mem_copy(((CLayerSpeedup*)pTiles)->m_pSpeedupTile, pSpeedupData, pTiles->m_Width*pTiles->m_Height*sizeof(CSpeedupTile));
+							unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Speedup);
 
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							if (Size >= pTiles->m_Width*pTiles->m_Height*sizeof(CSpeedupTile))
 							{
-								if(((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Force > 0 && (((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Type == TILE_BOOST || ((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Type == TILE_BOOSTS))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Type;
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+								mem_copy(((CLayerSpeedup*)pTiles)->m_pSpeedupTile, pSpeedupData, pTiles->m_Width*pTiles->m_Height*sizeof(CSpeedupTile));
+
+								for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+								{
+									if(((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Force > 0)
+										pTiles->m_pTiles[i].m_Index = TILE_BOOST;
+									else
+										pTiles->m_pTiles[i].m_Index = 0;
+								}
 							}
 
 							DataFile.UnloadData(pTilemapItem->m_Speedup);
@@ -538,32 +558,213 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						else if(pTiles->m_Front)
 						{
 							void *pFrontData = DataFile.GetData(pTilemapItem->m_Front);
-							mem_copy(((CLayerFront*)pTiles)->m_pTiles, pFrontData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+							unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Front);
+							if (Size >= pTiles->m_Width*pTiles->m_Height*sizeof(CTile))
+								mem_copy(((CLayerFront*)pTiles)->m_pTiles, pFrontData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
 
 							DataFile.UnloadData(pTilemapItem->m_Front);
 						}
 						else if(pTiles->m_Switch)
 						{
 							void *pSwitchData = DataFile.GetData(pTilemapItem->m_Switch);
-							mem_copy(((CLayerSwitch*)pTiles)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CSwitchTile));
-
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Switch);
+							if (Size >= pTiles->m_Width*pTiles->m_Height*sizeof(CSwitchTile))
 							{
-								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_TRIGGER + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_TRIGGER + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_DOOR + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_SHORT + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_MIDDLE + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_MIDDLE + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_LONG + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_LONG + ENTITY_OFFSET);
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+								const int s_aTilesComp[] = {
+									TILE_SWITCHTIMEDOPEN,
+									TILE_SWITCHTIMEDCLOSE,
+									TILE_SWITCHOPEN,
+									TILE_SWITCHCLOSE,
+									TILE_FREEZE,
+									TILE_DFREEZE,
+									TILE_DUNFREEZE,
+									TILE_HIT_START,
+									TILE_HIT_END,
+									TILE_JUMP,
+									TILE_PENALTY,
+									TILE_BONUS,
+									TILE_ALLOW_TELE_GUN,
+									TILE_ALLOW_BLUE_TELE_GUN
+								};
+								CSwitchTile *pLayerSwitchTiles = ((CLayerSwitch *)pTiles)->m_pSwitchTile;
+								mem_copy(((CLayerSwitch *)pTiles)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CSwitchTile));
+
+								for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+								{
+									if(((pLayerSwitchTiles[i].m_Type > (ENTITY_CRAZY_SHOTGUN + ENTITY_OFFSET) && ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type < (ENTITY_DRAGGER_WEAK + ENTITY_OFFSET)) || ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_O_FAST + 1 + ENTITY_OFFSET)))
+										continue;
+									else if(pLayerSwitchTiles[i].m_Type >= (ENTITY_ARMOR_1 + ENTITY_OFFSET) && pLayerSwitchTiles[i].m_Type <= (ENTITY_DOOR + ENTITY_OFFSET))
+									{
+										pTiles->m_pTiles[i].m_Index = pLayerSwitchTiles[i].m_Type;
+										pTiles->m_pTiles[i].m_Flags = pLayerSwitchTiles[i].m_Flags;
+										continue;
+									}
+
+									for (unsigned e = 0; e < sizeof(s_aTilesComp) / sizeof(s_aTilesComp[0]); e++)
+									{
+										if(pLayerSwitchTiles[i].m_Type == s_aTilesComp[e])
+										{
+											pTiles->m_pTiles[i].m_Index = s_aTilesComp[e];
+											pTiles->m_pTiles[i].m_Flags = pLayerSwitchTiles[i].m_Flags;
+										}
+									}
+								}
 							}
 							DataFile.UnloadData(pTilemapItem->m_Switch);
 						}
+						else if(pTiles->m_Tune)
+						{
+							void *pTuneData = DataFile.GetData(pTilemapItem->m_Tune);
+							unsigned int Size = DataFile.GetDataSize(pTilemapItem->m_Tune);
+							if (Size >= pTiles->m_Width*pTiles->m_Height*sizeof(CTuneTile))
+							{
+								CTuneTile *pLayerTuneTiles = ((CLayerTune *)pTiles)->m_pTuneTile;
+								mem_copy(((CLayerTune *)pTiles)->m_pTuneTile, pTuneData, pTiles->m_Width*pTiles->m_Height*sizeof(CTuneTile));
+
+								for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+								{
+									if(pLayerTuneTiles[i].m_Type == TILE_TUNE1)
+										pTiles->m_pTiles[i].m_Index = TILE_TUNE1;
+									else
+										pTiles->m_pTiles[i].m_Index = 0;
+								}
+							}
+							DataFile.UnloadData(pTilemapItem->m_Tune);
+						}
+						else // regular tile layer or game layer
+						{
+							if (Size >= pTiles->m_Width*pTiles->m_Height*sizeof(CTile))
+							{
+								mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+
+								if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
+								{
+									for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+									{
+										if(pTiles->m_pTiles[i].m_Index)
+											pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
+									}
+								}
+							}
+						}
+
+						DataFile.UnloadData(pTilemapItem->m_Data);
+
+						// Remove unused tiles on game and front layers
+						/*if(pTiles->m_Game)
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(!IsValidGameTile(pTiles->m_pTiles[i].m_Index))
+								{
+									if(pTiles->m_pTiles[i].m_Index) {
+										char aBuf[256];
+										str_format(aBuf, sizeof(aBuf), "game layer, tile %d", pTiles->m_pTiles[i].m_Index);
+										m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+										Changed = true;
+									}
+									pTiles->m_pTiles[i].m_Index = 0;
+									pTiles->m_pTiles[i].m_Flags = 0;
+								}
+							}
+						}
+						else if(pTiles->m_Front)
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(!IsValidFrontTile(pTiles->m_pTiles[i].m_Index))
+								{
+									if(pTiles->m_pTiles[i].m_Index) {
+										char aBuf[256];
+										str_format(aBuf, sizeof(aBuf), "front layer, tile %d", pTiles->m_pTiles[i].m_Index);
+										m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+										Changed = true;
+									}
+									pTiles->m_pTiles[i].m_Index = 0;
+									pTiles->m_pTiles[i].m_Flags = 0;
+								}
+							}
+						}
+						else if(pTiles->m_Tele)
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(!IsValidTeleTile(pTiles->m_pTiles[i].m_Index))
+								{
+									if(pTiles->m_pTiles[i].m_Index) {
+										char aBuf[256];
+										str_format(aBuf, sizeof(aBuf), "tele layer, tile %d", pTiles->m_pTiles[i].m_Index);
+										m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+										Changed = true;
+									}
+									pTiles->m_pTiles[i].m_Index = 0;
+									pTiles->m_pTiles[i].m_Flags = 0;
+								}
+							}
+						}
+						else if(pTiles->m_Speedup)
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(!IsValidSpeedupTile(pTiles->m_pTiles[i].m_Index))
+								{
+									if(pTiles->m_pTiles[i].m_Index) {
+										char aBuf[256];
+										str_format(aBuf, sizeof(aBuf), "speedup layer, tile %d", pTiles->m_pTiles[i].m_Index);
+										m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+										Changed = true;
+									}
+									pTiles->m_pTiles[i].m_Index = 0;
+									pTiles->m_pTiles[i].m_Flags = 0;
+								}
+							}
+						}
+						else if(pTiles->m_Switch)
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(!IsValidSwitchTile(pTiles->m_pTiles[i].m_Index))
+								{
+									if(pTiles->m_pTiles[i].m_Index) {
+										char aBuf[256];
+										str_format(aBuf, sizeof(aBuf), "switch layer, tile %d", pTiles->m_pTiles[i].m_Index);
+										m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+										Changed = true;
+									}
+									pTiles->m_pTiles[i].m_Index = 0;
+									pTiles->m_pTiles[i].m_Flags = 0;
+								}
+							}
+						}*/
+
+						// Convert race stoppers to ddrace stoppers
+						/*if(pTiles->m_Game)
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(pTiles->m_pTiles[i].m_Index == 29)
+								{
+									pTiles->m_pTiles[i].m_Index = 60;
+									pTiles->m_pTiles[i].m_Flags = TILEFLAG_HFLIP|TILEFLAG_VFLIP|TILEFLAG_ROTATE;
+								}
+								else if(pTiles->m_pTiles[i].m_Index == 30)
+								{
+									pTiles->m_pTiles[i].m_Index = 60;
+									pTiles->m_pTiles[i].m_Flags = TILEFLAG_ROTATE;
+								}
+								else if(pTiles->m_pTiles[i].m_Index == 31)
+								{
+									pTiles->m_pTiles[i].m_Index = 60;
+									pTiles->m_pTiles[i].m_Flags = TILEFLAG_HFLIP|TILEFLAG_VFLIP;
+								}
+								else if(pTiles->m_pTiles[i].m_Index == 32)
+								{
+									pTiles->m_pTiles[i].m_Index = 60;
+									pTiles->m_pTiles[i].m_Flags = 0;
+								}
+							}
+						}*/
+
 					}
 					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
 					{

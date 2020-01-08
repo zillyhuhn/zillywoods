@@ -898,6 +898,7 @@ set(EXPECTED_DATA
   editor/speedup.png
   editor/switch.png
   editor/tele.png
+  editor/tune.png
   emoticons.png
   fonts/DejaVuSans.ttf
   game.png
@@ -1371,6 +1372,7 @@ set_src(GAME_SHARED GLOB src/game
   gamecore.h
   layers.cpp
   layers.h
+  mapitems.cpp
   mapitems.h
   tuning.h
   variables.h

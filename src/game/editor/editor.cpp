@@ -1101,6 +1101,15 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 			static int s_SwitchPopupId = 0;
 			UiInvokePopupMenu(&s_SwitchPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 23, PopupSwitch);
 		}
+		// do tuning button
+		TB_Bottom.VSplitLeft(5.0f, &Button, &TB_Bottom);
+		TB_Bottom.VSplitLeft(60.0f, &Button, &TB_Bottom);
+		static int s_TuneButton = 0;
+		if(DoButton_Ex(&s_TuneButton, "Tune", (pS && pS->m_Tune)?0:-1, &Button, 0, "Tune", CUI::CORNER_ALL))
+		{
+			static int s_TunePopupID = 0;
+			UiInvokePopupMenu(&s_TunePopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 90, PopupTune);
+		}
 	}
 
 	TB_Bottom.VSplitLeft(5.0f, 0, &TB_Bottom);
@@ -4603,6 +4612,13 @@ void CEditorMap::MakeSwitchLayer(CLayer *pLayer)
 	m_pSwitchLayer->m_Texture = m_pEditor->m_SwitchTexture;
 }
 
+void CEditorMap::MakeTuneLayer(CLayer *pLayer)
+{
+	m_pTuneLayer = (CLayerTune *)pLayer;
+	m_pTuneLayer->m_pEditor = m_pEditor;
+	m_pTuneLayer->m_Texture = m_pEditor->m_TuneTexture;
+}
+
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
 	m_pGameGroup = pGroup;
@@ -4686,6 +4702,7 @@ void CEditor::Init()
 	m_TeleTexture = Graphics()->LoadTexture("editor/tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_SpeedupTexture = Graphics()->LoadTexture("editor/speedup.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_SwitchTexture = Graphics()->LoadTexture("editor/switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_TuneTexture = Graphics()->LoadTexture("editor/tune.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

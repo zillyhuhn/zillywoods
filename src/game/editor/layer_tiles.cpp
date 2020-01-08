@@ -1266,3 +1266,283 @@ void CLayerSwitch::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 		}
 	}
 }
+
+//------------------------------------------------------
+
+CLayerTune::CLayerTune(int w, int h)
+: CLayerTiles(w, h)
+{
+	//m_Type = LAYERTYPE_TUNE;
+	str_copy(m_aName, "Tune", sizeof(m_aName));
+	m_Tune = 1;
+
+	m_pTuneTile = new CTuneTile[w*h];
+	mem_zero(m_pTuneTile, w*h*sizeof(CTuneTile));
+}
+
+CLayerTune::~CLayerTune()
+{
+	delete[] m_pTuneTile;
+}
+
+void CLayerTune::Resize(int NewW, int NewH)
+{
+	// resize Tune data
+	CTuneTile *pNewTuneData = new CTuneTile[NewW*NewH];
+	mem_zero(pNewTuneData, NewW*NewH*sizeof(CTuneTile));
+
+	// copy old data
+	for(int y = 0; y < min(NewH, m_Height); y++)
+		mem_copy(&pNewTuneData[y*NewW], &m_pTuneTile[y*m_Width], min(m_Width, NewW)*sizeof(CTuneTile));
+
+	// replace old
+	delete [] m_pTuneTile;
+	m_pTuneTile = pNewTuneData;
+
+	// resize tile data
+	CLayerTiles::Resize(NewW, NewH);
+
+	// resize gamelayer too
+	if(m_pEditor->m_Map.m_pGameLayer->m_Width != NewW || m_pEditor->m_Map.m_pGameLayer->m_Height != NewH)
+		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
+}
+
+void CLayerTune::Shift(int Direction)
+{
+	CLayerTiles::Shift(Direction);
+	// int o = m_pEditor->m_ShiftBy;
+	int o = 1; // TODO: ZillyWoods
+
+	switch(Direction)
+	{
+	case 1:
+		{
+			// left
+			for(int y = 0; y < m_Height; ++y)
+			{
+				mem_move(&m_pTuneTile[y*m_Width], &m_pTuneTile[y*m_Width+o], (m_Width-o)*sizeof(CTuneTile));
+				mem_zero(&m_pTuneTile[y*m_Width + (m_Width-o)], o*sizeof(CTuneTile));
+			}
+		}
+		break;
+	case 2:
+		{
+			// right
+			for(int y = 0; y < m_Height; ++y)
+			{
+				mem_move(&m_pTuneTile[y*m_Width+o], &m_pTuneTile[y*m_Width], (m_Width-o)*sizeof(CTuneTile));
+				mem_zero(&m_pTuneTile[y*m_Width], o*sizeof(CTuneTile));
+			}
+		}
+		break;
+	case 4:
+		{
+			// up
+			for(int y = 0; y < m_Height-o; ++y)
+			{
+				mem_copy(&m_pTuneTile[y*m_Width], &m_pTuneTile[(y+o)*m_Width], m_Width*sizeof(CTuneTile));
+				mem_zero(&m_pTuneTile[(y+o)*m_Width], m_Width*sizeof(CTuneTile));
+			}
+		}
+		break;
+	case 8:
+		{
+			// down
+			for(int y = m_Height-1; y >= o; --y)
+			{
+				mem_copy(&m_pTuneTile[y*m_Width], &m_pTuneTile[(y-o)*m_Width], m_Width*sizeof(CTuneTile));
+				mem_zero(&m_pTuneTile[(y-o)*m_Width], m_Width*sizeof(CTuneTile));
+			}
+		}
+	}
+}
+
+/*
+bool CLayerTune::IsEmpty(CLayerTiles *pLayer)
+{
+	for(int y = 0; y < pLayer->m_Height; y++)
+		for(int x = 0; x < pLayer->m_Width; x++)
+			if(IsValidTuneTile(pLayer->GetTile(x, y).m_Index))
+				return false;
+
+	return true;
+}
+*/
+
+void CLayerTune::BrushDraw(CLayer *pBrush, float wx, float wy)
+{
+	if(m_Readonly)
+		return;
+
+	CLayerTune *l = (CLayerTune *)pBrush;
+	int sx = ConvertX(wx);
+	int sy = ConvertY(wy);
+	if(str_comp(l->m_aName, m_pEditor->m_aFileName))
+	{
+		m_pEditor->m_TuningNum = l->m_TuningNumber;
+	}
+
+	// bool Destructive = m_pEditor->m_BrushDrawDestructive || IsEmpty(l);
+
+	for(int y = 0; y < l->m_Height; y++)
+			for(int x = 0; x < l->m_Width; x++)
+			{
+				int fx = x+sx;
+				int fy = y+sy;
+
+				if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+					continue;
+
+				// if(!Destructive && GetTile(fx, fy).m_Index)
+				// 	continue;
+
+				if(IsValidTuneTile(l->m_pTiles[y*l->m_Width+x].m_Index))
+				{
+					if(m_pEditor->m_TuningNum != l->m_TuningNumber)
+					{
+						m_pTuneTile[fy*m_Width+fx].m_Number = m_pEditor->m_TuningNum;
+					}
+					else if(l->m_pTuneTile[y*l->m_Width+x].m_Number)
+						m_pTuneTile[fy*m_Width+fx].m_Number = l->m_pTuneTile[y*l->m_Width+x].m_Number;
+					else
+					{
+						if(!m_pEditor->m_TuningNum)
+						{
+							m_pTuneTile[fy*m_Width+fx].m_Number = 0;
+							m_pTuneTile[fy*m_Width+fx].m_Type = 0;
+							m_pTiles[fy*m_Width+fx].m_Index = 0;
+							continue;
+						}
+						else
+							m_pTuneTile[fy*m_Width+fx].m_Number = m_pEditor->m_TuningNum;
+					}
+
+					m_pTuneTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
+					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
+				}
+				else
+				{
+					m_pTuneTile[fy*m_Width+fx].m_Number = 0;
+					m_pTuneTile[fy*m_Width+fx].m_Type = 0;
+					m_pTiles[fy*m_Width+fx].m_Index = 0;
+				}
+			}
+	// FlagModified(sx, sy, l->m_Width, l->m_Height);
+}
+
+
+void CLayerTune::BrushFlipX()
+{
+	CLayerTiles::BrushFlipX();
+
+	for(int y = 0; y < m_Height; y++)
+		for(int x = 0; x < m_Width/2; x++)
+		{
+			CTuneTile Tmp = m_pTuneTile[y*m_Width+x];
+			m_pTuneTile[y*m_Width+x] = m_pTuneTile[y*m_Width+m_Width-1-x];
+			m_pTuneTile[y*m_Width+m_Width-1-x] = Tmp;
+		}
+}
+
+void CLayerTune::BrushFlipY()
+{
+	CLayerTiles::BrushFlipY();
+
+	for(int y = 0; y < m_Height/2; y++)
+		for(int x = 0; x < m_Width; x++)
+		{
+			CTuneTile Tmp = m_pTuneTile[y*m_Width+x];
+			m_pTuneTile[y*m_Width+x] = m_pTuneTile[(m_Height-1-y)*m_Width+x];
+			m_pTuneTile[(m_Height-1-y)*m_Width+x] = Tmp;
+		}
+}
+
+void CLayerTune::BrushRotate(float Amount)
+{
+	int Rotation = (round_to_int(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
+	if(Rotation < 0)
+		Rotation +=4;
+
+	if(Rotation == 1 || Rotation == 3)
+	{
+		// 90° rotation
+		CTuneTile *pTempData1 = new CTuneTile[m_Width*m_Height];
+		CTile *pTempData2 = new CTile[m_Width*m_Height];
+		mem_copy(pTempData1, m_pTuneTile, m_Width*m_Height*sizeof(CTuneTile));
+		mem_copy(pTempData2, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTuneTile *pDst1 = m_pTuneTile;
+		CTile *pDst2 = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst1, ++pDst2)
+			{
+				*pDst1 = pTempData1[y*m_Width+x];
+				*pDst2 = pTempData2[y*m_Width+x];
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData1;
+		delete[] pTempData2;
+	}
+
+	if(Rotation == 2 || Rotation == 3)
+	{
+		BrushFlipX();
+		BrushFlipY();
+	}
+}
+
+
+void CLayerTune::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
+{
+	if(m_Readonly || (!Empty && pBrush->m_Type != LAYERTYPE_TILES))
+		return;
+
+	Snap(&Rect); // corrects Rect; no need of <=
+
+		int sx = ConvertX(Rect.x);
+		int sy = ConvertY(Rect.y);
+		int w = ConvertX(Rect.w);
+		int h = ConvertY(Rect.h);
+
+		CLayerTune *pLt = static_cast<CLayerTune*>(pBrush);
+
+		// bool Destructive = m_pEditor->m_BrushDrawDestructive || Empty || IsEmpty(pLt);
+
+		for(int y = 0; y < h; y++)
+		{
+			for(int x = 0; x < w; x++)
+			{
+				int fx = x+sx;
+				int fy = y+sy;
+
+				if(fx < 0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+					continue;
+
+				// if(!Destructive && GetTile(fx, fy).m_Index)
+				// 	continue;
+
+				if(Empty || !IsValidTuneTile((pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)]).m_Index)) // \o/ this fixes editor bug; TODO: use IsUsedInThisLayer here
+				{
+					m_pTiles[fy*m_Width+fx].m_Index = 0;
+					m_pTuneTile[fy*m_Width+fx].m_Type = 0;
+					m_pTuneTile[fy*m_Width+fx].m_Number = 0;
+				}
+				else
+				{
+					m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
+					if(pLt->m_Tune && m_pTiles[fy*m_Width+fx].m_Index > 0)
+					{
+						if((!pLt->m_pTuneTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number && m_pEditor->m_TuningNum) || m_pEditor->m_TuningNum != pLt->m_TuningNumber)
+							m_pTuneTile[fy*m_Width+fx].m_Number = m_pEditor->m_TuningNum;
+						else
+							m_pTuneTile[fy*m_Width+fx].m_Number = pLt->m_pTuneTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number;
+						m_pTuneTile[fy*m_Width+fx].m_Type = m_pTiles[fy*m_Width+fx].m_Index;
+					}
+				}
+			}
+		}
+
+	// FlagModified(sx, sy, w, h);
+}
