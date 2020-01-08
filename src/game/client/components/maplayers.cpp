@@ -408,7 +408,6 @@ void CMapLayers::OnRender()
 			bool IsTeleLayer = false;
 			bool IsSpeedupLayer = false;
 			bool IsTuneLayer = false;
-			bool IsEntityLayer = false;
 
 			if(pLayer == (CMapItemLayer*)pLayers->GameLayer())
 			{
@@ -417,19 +416,19 @@ void CMapLayers::OnRender()
 			}
 
 			if(pLayer == (CMapItemLayer*)pLayers->FrontLayer())
-				IsEntityLayer = IsFrontLayer = true;
+				IsFrontLayer = true;
 
 			if(pLayer == (CMapItemLayer*)pLayers->SwitchLayer())
-				IsEntityLayer = IsSwitchLayer = true;
+				IsSwitchLayer = true;
 
 			if(pLayer == (CMapItemLayer*)pLayers->TeleLayer())
-				IsEntityLayer = IsTeleLayer = true;
+				IsTeleLayer = true;
 
 			if(pLayer == (CMapItemLayer*)pLayers->SpeedupLayer())
-				IsEntityLayer = IsSpeedupLayer = true;
+				IsSpeedupLayer = true;
 
 			if(pLayer == (CMapItemLayer*)pLayers->TuneLayer())
-				IsEntityLayer = IsTuneLayer = true;
+				IsTuneLayer = true;
 
 			if(m_Type == -1)
 				Render = true;
