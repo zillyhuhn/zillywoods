@@ -324,7 +324,7 @@ end
 shared_icons = {}
 function SharedIcons(compiler)
 	if not shared_icons[compiler] then
-		local server_icon = ResCompile("other/icons/zillywoods_srv_" .. compiler .. ".rc", compiler)
+		local server_icon = ResCompile("other/icons/teeworlds_srv_" .. compiler .. ".rc", compiler)
 		local client_icon = ResCompile("other/icons/zillywoods_" .. compiler .. ".rc", compiler)
 		shared_icons[compiler] = {server=server_icon, client=client_icon}
 	end
@@ -365,7 +365,7 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "zillywoods_srv", libs["zlib"], libs["md5"], server, game_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
 end
 
 function BuildTools(settings)
@@ -520,7 +520,7 @@ if ScriptArgs['builddir'] then
 	builddir = ScriptArgs['builddir']
 end
 
-targets = {client="zillywoods", server="zillywoods_srv",
+targets = {client="zillywoods", server="teeworlds_srv",
            versionserver="versionsrv", masterserver="mastersrv",
            tools="pseudo_tools", content="content"}
 

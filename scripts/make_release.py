@@ -208,10 +208,10 @@ if use_bundle:
 	open(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 	# create Teeworlds Server appfolder
-	serverbundle_content_dir = os.path.join(package_dir, "ZillyWoods Server.app/Contents")
+	serverbundle_content_dir = os.path.join(package_dir, "Teeworlds Server.app/Contents")
 	serverbundle_bin_dir = os.path.join(serverbundle_content_dir, "MacOS")
 	serverbundle_resource_dir = os.path.join(serverbundle_content_dir, "Resources")
-	os.mkdir(os.path.join(package_dir, "ZillyWoods Server.app"))
+	os.mkdir(os.path.join(package_dir, "Teeworlds Server.app"))
 	os.mkdir(serverbundle_content_dir)
 	os.mkdir(serverbundle_bin_dir)
 	os.mkdir(serverbundle_resource_dir)
@@ -219,7 +219,7 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
 	copy_tree(maps_dir, serverbundle_resource_dir+"/data/maps")
-	shutil.copy("other/icons/zillywoods_srv.icns", serverbundle_resource_dir)
+	shutil.copy("other/icons/teeworlds_srv.icns", serverbundle_resource_dir)
 	shutil.copy(source_package_dir+name+"_srv"+exe_ext, serverbundle_bin_dir)
 	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
 	open(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
@@ -232,7 +232,7 @@ if use_bundle:
 	<key>CFBundleExecutable</key>
 	<string>zillywoods_server</string>
 	<key>CFBundleIconFile</key>
-	<string>ZillyWoods_srv</string>
+	<string>TeeWorlds_srv</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
