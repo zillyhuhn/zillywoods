@@ -155,6 +155,7 @@ MACRO_CONFIG_STR(ClTimeoutCode, cl_timeout_code, 64, "", CFGFLAG_SAVE|CFGFLAG_CL
 MACRO_CONFIG_INT(ClTextEntities, cl_text_entities, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Render textual entity data")
 MACRO_CONFIG_INT(ClTextEntitiesSize, cl_text_entities_size, 100, 0, 100, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Size of textual entity data from 0 to 100%")
 
+MACRO_CONFIG_INT(ClDDracePrediction, cl_ddrace_prediction, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "predicts stoppers and hookthrough tiles WARNING CAN CAUSE CRASHES")
 MACRO_CONFIG_INT(ClShowAdmins, cl_show_admins, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display admins in the scoreboard")
 MACRO_CONFIG_INT(ClShowSilentMessages, cl_show_silent_messages, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Force show all server messages, including \"silent\" ones")
 MACRO_CONFIG_INT(ClClientChatCommands, cl_client_chat_commands, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use chat for client side commands starting with '/'")
