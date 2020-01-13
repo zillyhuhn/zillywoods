@@ -202,7 +202,7 @@ void CCharacterCore::Tick(bool UseInput)
 		if(g_Config.m_ClDDracePrediction)
 			Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, 0, &teleNr);
 		else
-			Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, 0, &teleNr);
+			Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
 
 		//m_NewHook = false;
 
