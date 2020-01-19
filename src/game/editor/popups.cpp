@@ -148,6 +148,93 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		}
 	}
 
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pTeleLayer)
+	{
+		// new tele layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewTeleLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewTeleLayerButton, "Add tele layer", 0, &Button, 0, "Creates a new tele layer"))
+		{
+			CLayer *l = new CLayerTele(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			pEditor->m_Map.MakeTeleLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Brush.Clear();
+			return 1;
+		}
+	}
+
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pSpeedupLayer)
+	{
+		// new speedup layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewSpeedupLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewSpeedupLayerButton, "Add speedup layer", 0, &Button, 0, "Creates a new speedup layer"))
+		{
+			CLayer *l = new CLayerSpeedup(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			pEditor->m_Map.MakeSpeedupLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Brush.Clear();
+			return 1;
+		}
+	}
+
+	/*
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pTuneLayer)
+	{
+		// new tune layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewTuneLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewTuneLayerButton, "Add tune layer", 0, &Button, 0, "Creates a new tuning layer"))
+		{
+			CLayer *l = new CLayerTune(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			pEditor->m_Map.MakeTuneLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Brush.Clear();
+			return 1;
+		}
+	}
+	*/
+
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pFrontLayer)
+	{
+		// new front layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewFrontLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewFrontLayerButton, "Add front layer", 0, &Button, 0, "Creates a new item layer"))
+		{
+			CLayer *l = new CLayerFront(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			pEditor->m_Map.MakeFrontLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Brush.Clear();
+			return 1;
+		}
+	}
+
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pSwitchLayer)
+	{
+		// new Switch layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewSwitchLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewSwitchLayerButton, "Add switch layer", 0, &Button, 0, "Creates a new switch layer"))
+		{
+			CLayer *l = new CLayerSwitch(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			pEditor->m_Map.MakeSwitchLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Brush.Clear();
+			return 1;
+		}
+	}
+
 	// new quad layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
