@@ -1880,31 +1880,42 @@ void CGameClient::SendSwitchTeam(int Team)
 void CGameClient::SendStartInfo(bool IsDummy)
 {
 	CNetMsg_Cl_StartInfo Msg;
-	Msg.m_pName = g_Config.m_PlayerName;
-	Msg.m_pClan = g_Config.m_PlayerClan;
-	Msg.m_Country = g_Config.m_PlayerCountry;
 	char aClientStr[32];
 	str_format(aClientStr, sizeof(aClientStr), "zilly!%s", ZILLYWOODS_VERSION);
-	for(int p = 0; p < NUM_SKINPARTS; p++)
-	{
-		if((p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[p], "standard"))
-			Msg.m_apSkinPartNames[p] = aClientStr;
-		else
-			Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
-		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
-		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
-	}
 	if(IsDummy)
 	{
 		Msg.m_pName = g_Config.m_DummyName;
 		Msg.m_pClan = g_Config.m_DummyClan;
 		Msg.m_Country = g_Config.m_DummyCountry;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if((p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[1][p], "standard"))
+				Msg.m_apSkinPartNames[p] = aClientStr;
+			else
+				Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[1][p];
+			Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[1][p];
+			Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[1][p];
+		}
 		CMsgPacker Packer(Msg.MsgID(), false);
 		Msg.Pack(&Packer);
 		Client()->SendMsgExY(&Packer, MSGFLAG_VITAL|MSGFLAG_FLUSH, 1);
 	}
 	else
+	{
+		Msg.m_pName = g_Config.m_PlayerName;
+		Msg.m_pClan = g_Config.m_PlayerClan;
+		Msg.m_Country = g_Config.m_PlayerCountry;
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			if((p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[0][p], "standard"))
+				Msg.m_apSkinPartNames[p] = aClientStr;
+			else
+				Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[0][p];
+			Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[0][p];
+			Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[0][p];
+		}
 		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	}
 }
 
 void CGameClient::SendKill()
@@ -1930,9 +1941,9 @@ void CGameClient::SendSkinChange()
 	CNetMsg_Cl_SkinChange Msg;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
-		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
-		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
+		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[0][p];
+		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[0][p];
+		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[0][p];
 	}
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD|MSGFLAG_FLUSH);
 	m_LastSkinChangeTime = Client()->LocalTime();

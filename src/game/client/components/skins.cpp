@@ -17,12 +17,21 @@
 const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body","skins");Localize("marking","skins");Localize("decoration","skins");Localize("hands","skins");Localize("feet","skins");Localize("eyes","skins"); */
 const char * const CSkins::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
 
-char *const CSkins::ms_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinMarking, g_Config.m_PlayerSkinDecoration,
-													g_Config.m_PlayerSkinHands, g_Config.m_PlayerSkinFeet, g_Config.m_PlayerSkinEyes};
-int *const CSkins::ms_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCustomColorBody, &g_Config.m_PlayerUseCustomColorMarking, &g_Config.m_PlayerUseCustomColorDecoration,
-													&g_Config.m_PlayerUseCustomColorHands, &g_Config.m_PlayerUseCustomColorFeet, &g_Config.m_PlayerUseCustomColorEyes};
-int *const CSkins::ms_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorMarking, &g_Config.m_PlayerColorDecoration,
-													&g_Config.m_PlayerColorHands, &g_Config.m_PlayerColorFeet, &g_Config.m_PlayerColorEyes};
+char *const CSkins::ms_apSkinVariables[2][NUM_SKINPARTS] = {{
+	g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinMarking, g_Config.m_PlayerSkinDecoration,
+	g_Config.m_PlayerSkinHands, g_Config.m_PlayerSkinFeet, g_Config.m_PlayerSkinEyes},{
+	g_Config.m_DummySkinBody, g_Config.m_DummySkinMarking, g_Config.m_DummySkinDecoration,
+	g_Config.m_DummySkinHands, g_Config.m_DummySkinFeet, g_Config.m_DummySkinEyes}};
+int *const CSkins::ms_apUCCVariables[2][NUM_SKINPARTS] = {{
+	&g_Config.m_PlayerUseCustomColorBody, &g_Config.m_PlayerUseCustomColorMarking, &g_Config.m_PlayerUseCustomColorDecoration,
+	&g_Config.m_PlayerUseCustomColorHands, &g_Config.m_PlayerUseCustomColorFeet, &g_Config.m_PlayerUseCustomColorEyes},{
+	&g_Config.m_DummyUseCustomColorBody, &g_Config.m_DummyUseCustomColorMarking, &g_Config.m_DummyUseCustomColorDecoration,
+	&g_Config.m_DummyUseCustomColorHands, &g_Config.m_DummyUseCustomColorFeet, &g_Config.m_DummyUseCustomColorEyes}};
+int *const CSkins::ms_apColorVariables[2][NUM_SKINPARTS] = {{
+	&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorMarking, &g_Config.m_PlayerColorDecoration,
+	&g_Config.m_PlayerColorHands, &g_Config.m_PlayerColorFeet, &g_Config.m_PlayerColorEyes},{
+	&g_Config.m_DummyColorBody, &g_Config.m_DummyColorMarking, &g_Config.m_DummyColorDecoration,
+	&g_Config.m_DummyColorHands, &g_Config.m_DummyColorFeet, &g_Config.m_DummyColorEyes}};
 
 const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
@@ -316,11 +325,11 @@ void CSkins::AddSkin(const char *pSkinName)
 	str_copy(Skin.m_aName, pSkinName, sizeof(Skin.m_aName));
 	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; ++PartIndex)
 	{
-		int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[PartIndex], false);
+		int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[0][PartIndex], false);
 		if(SkinPart > -1)
 			Skin.m_apParts[PartIndex] = GetSkinPart(PartIndex, SkinPart);
-		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[PartIndex];
-		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[PartIndex];
+		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[0][PartIndex];
+		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[0][PartIndex];
 	}
 	int SkinIndex = Find(pSkinName, false);
 	if(SkinIndex != -1)
