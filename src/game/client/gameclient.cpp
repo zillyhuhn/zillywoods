@@ -324,6 +324,25 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("player_skin_hands", ConchainSkinChange, this);
 	Console()->Chain("player_skin_feet", ConchainSkinChange, this);
 	Console()->Chain("player_skin_eyes", ConchainSkinChange, this);
+	Console()->Chain("dummy_color_body", ConchainSkinChange, this);
+	Console()->Chain("dummy_color_marking", ConchainSkinChange, this);
+	Console()->Chain("dummy_color_decoration", ConchainSkinChange, this);
+	Console()->Chain("dummy_color_hands", ConchainSkinChange, this);
+	Console()->Chain("dummy_color_feet", ConchainSkinChange, this);
+	Console()->Chain("dummy_color_eyes", ConchainSkinChange, this);
+	Console()->Chain("dummy_use_custom_color_body", ConchainSkinChange, this);
+	Console()->Chain("dummy_use_custom_color_marking", ConchainSkinChange, this);
+	Console()->Chain("dummy_use_custom_color_decoration", ConchainSkinChange, this);
+	Console()->Chain("dummy_use_custom_color_hands", ConchainSkinChange, this);
+	Console()->Chain("dummy_use_custom_color_feet", ConchainSkinChange, this);
+	Console()->Chain("dummy_use_custom_color_eyes", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin_body", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin_marking", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin_decoration", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin_hands", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin_feet", ConchainSkinChange, this);
+	Console()->Chain("dummy_skin_eyes", ConchainSkinChange, this);
 
 	Console()->Chain("cl_dummy", ConchainSpecialDummy, this);
 	Console()->Register("dbg_dummy", "", CFGFLAG_CLIENT, ConDebugDummy, this, "debug dummy ids");
@@ -1936,14 +1955,14 @@ void CGameClient::SendReadyChange()
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CGameClient::SendSkinChange()
+void CGameClient::SendSkinChange(bool IsDummy)
 {
 	CNetMsg_Cl_SkinChange Msg;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[0][p];
-		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[0][p];
-		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[0][p];
+		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[IsDummy][p];
+		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[IsDummy][p];
+		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[IsDummy][p];
 	}
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD|MSGFLAG_FLUSH);
 	m_LastSkinChangeTime = Client()->LocalTime();
@@ -1985,7 +2004,7 @@ void CGameClient::ConchainSkinChange(IConsole::IResult *pResult, void *pUserData
 	pfnCallback(pResult, pCallbackUserData);
 	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
 	if(pClient->Client()->State() == IClient::STATE_ONLINE && pResult->NumArguments())
-		pClient->SendSkinChange();
+		pClient->SendSkinChange(g_Config.m_ClDummy);
 }
 
 void CGameClient::ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

@@ -287,7 +287,7 @@ public:
 	virtual void SwitchDummy();
 	void SendKill();
 	void SendReadyChange();
-	void SendSkinChange();
+	void SendSkinChange(bool IsDummy = false);
 
 	// pointers to all systems
 	class CGameConsole *m_pGameConsole;

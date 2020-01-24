@@ -2541,7 +2541,7 @@ void CMenus::SetActive(bool Active)
 			if(Client()->State() == IClient::STATE_ONLINE && m_SkinModified)
 			{
 				m_SkinModified = false;
-				m_pClient->SendSkinChange();
+				m_pClient->SendSkinChange(g_Config.m_ClDummy);
 			}
 		}
 	}
