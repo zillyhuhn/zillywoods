@@ -21,17 +21,18 @@ CCamera::CCamera()
 	m_PrevCenter = vec2(0.0f, 0.0f);
 	m_MenuCenter = vec2(0.0f, 0.0f);
 
-	m_Positions[g_Config.m_ClDummy][POS_START] = vec2(500.0f, 500.0f);
-	m_Positions[g_Config.m_ClDummy][POS_INTERNET] = vec2(1000.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_LAN] = vec2(1100.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_DEMOS] = vec2(1500.0f, 500.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_GENERAL] = vec2(500.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_PLAYER] = vec2(600.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_TEE] = vec2(700.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_CONTROLS] = vec2(800.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_GRAPHICS] = vec2(900.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_SOUND] = vec2(1000.0f, 1000.0f);
-	m_Positions[g_Config.m_ClDummy][POS_SETTINGS_ZILLY] = vec2(1100.0f, 1000.0f);
+	int Dummy = m_pClient == NULL ? 0 : m_pClient->Config()->m_ClDummy;
+	m_Positions[Dummy][POS_START] = vec2(500.0f, 500.0f);
+	m_Positions[Dummy][POS_INTERNET] = vec2(1000.0f, 1000.0f);
+	m_Positions[Dummy][POS_LAN] = vec2(1100.0f, 1000.0f);
+	m_Positions[Dummy][POS_DEMOS] = vec2(1500.0f, 500.0f);
+	m_Positions[Dummy][POS_SETTINGS_GENERAL] = vec2(500.0f, 1000.0f);
+	m_Positions[Dummy][POS_SETTINGS_PLAYER] = vec2(600.0f, 1000.0f);
+	m_Positions[Dummy][POS_SETTINGS_TEE] = vec2(700.0f, 1000.0f);
+	m_Positions[Dummy][POS_SETTINGS_CONTROLS] = vec2(800.0f, 1000.0f);
+	m_Positions[Dummy][POS_SETTINGS_GRAPHICS] = vec2(900.0f, 1000.0f);
+	m_Positions[Dummy][POS_SETTINGS_SOUND] = vec2(1000.0f, 1000.0f);
+	m_Positions[Dummy][POS_SETTINGS_ZILLY] = vec2(1100.0f, 1000.0f);
 
 	m_CurrentPosition = -1;
 	m_MoveTime = 0.0f;
@@ -57,11 +58,11 @@ void CCamera::OnRender()
 		{
 			if(m_CamType != CAMTYPE_SPEC)
 			{
-				m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy] = m_PrevCenter;
+				m_pClient->m_pControls->m_MousePos[m_pClient->Config()->m_ClDummy] = m_PrevCenter;
 				m_pClient->m_pControls->ClampMousePos();
 				m_CamType = CAMTYPE_SPEC;
 			}
-			m_Center = m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy];
+			m_Center = m_pClient->m_pControls->m_MousePos[m_pClient->Config()->m_ClDummy];
 		}
 		else
 		{
@@ -73,14 +74,14 @@ void CCamera::OnRender()
 
 			vec2 CameraOffset(0, 0);
 
-			float l = length(m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy]);
-			if(g_Config.m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
+			float l = length(m_pClient->m_pControls->m_MousePos[m_pClient->Config()->m_ClDummy]);
+			if(m_pClient->Config()->m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
 			{
-				float DeadZone = g_Config.m_ClMouseDeadzone;
-				float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+				float DeadZone = m_pClient->Config()->m_ClMouseDeadzone;
+				float FollowFactor = m_pClient->Config()->m_ClMouseFollowfactor/100.0f;
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 
-				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy])*OffsetAmount;
+				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos[m_pClient->Config()->m_ClDummy])*OffsetAmount;
 			}
 
 			if(m_pClient->m_Snap.m_SpecInfo.m_Active)
@@ -95,22 +96,22 @@ void CCamera::OnRender()
 		m_Zoom = 0.7f;
 		static vec2 Dir = vec2(1.0f, 0.0f);
 
-		if(distance(m_Center, m_RotationCenter) <= (float)g_Config.m_ClRotationRadius+0.5f)
+		if(distance(m_Center, m_RotationCenter) <= (float)m_pClient->Config()->m_ClRotationRadius+0.5f)
 		{
 			// do little rotation
-			float RotPerTick = 360.0f/(float)g_Config.m_ClRotationSpeed * Client()->RenderFrameTime();
+			float RotPerTick = 360.0f/(float)m_pClient->Config()->m_ClRotationSpeed * Client()->RenderFrameTime();
 			Dir = rotate(Dir, RotPerTick);
-			m_Center = m_RotationCenter+Dir*(float)g_Config.m_ClRotationRadius;
+			m_Center = m_RotationCenter+Dir*(float)m_pClient->Config()->m_ClRotationRadius;
 		}
 		else
 		{
 			// positions for the animation
 			Dir = normalize(m_AnimationStartPos - m_RotationCenter);
-			vec2 TargetPos = m_RotationCenter + Dir * (float)g_Config.m_ClRotationRadius;
+			vec2 TargetPos = m_RotationCenter + Dir * (float)m_pClient->Config()->m_ClRotationRadius;
 			float Distance = distance(m_AnimationStartPos, TargetPos);
 
 			// move time
-			m_MoveTime += Client()->RenderFrameTime()*g_Config.m_ClCameraSpeed / 10.0f;
+			m_MoveTime += Client()->RenderFrameTime()*m_pClient->Config()->m_ClCameraSpeed / 10.0f;
 			float XVal = 1 - m_MoveTime;
 			XVal = pow(XVal, 7.0f);
 
@@ -126,7 +127,7 @@ void CCamera::ChangePosition(int PositionNumber)
 	if(PositionNumber < 0 || PositionNumber > NUM_POS-1)
 		return;
 	m_AnimationStartPos = m_Center;
-	m_RotationCenter = m_Positions[g_Config.m_ClDummy][PositionNumber];
+	m_RotationCenter = m_Positions[m_pClient->Config()->m_ClDummy][PositionNumber];
 	m_CurrentPosition = PositionNumber;
 	m_MoveTime = 0.0f;
 }
@@ -141,7 +142,7 @@ void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
 	CCamera *pSelf = (CCamera *)pUserData;
 	int PositionNumber = clamp(pResult->GetInteger(0), 0, NUM_POS-1);
 	vec2 Position = vec2(pResult->GetInteger(1)*32.0f+16.0f, pResult->GetInteger(2)*32.0f+16.0f);
-	pSelf->m_Positions[g_Config.m_ClDummy][PositionNumber] = Position;
+	pSelf->m_Positions[pSelf->m_pClient->Config()->m_ClDummy][PositionNumber] = Position;
 
 	// update
 	if(pSelf->GetCurrentPosition() == PositionNumber)
@@ -170,13 +171,13 @@ void CCamera::OnReset()
 {
 	m_Zoom = 1.0f;
 
-	if(g_Config.m_ClDefaultZoom < 10)
+	if(m_pClient->Config()->m_ClDefaultZoom < 10)
 	{
-		m_Zoom = pow(1/ZoomStep, 10 - g_Config.m_ClDefaultZoom);
+		m_Zoom = pow(1/ZoomStep, 10 - m_pClient->Config()->m_ClDefaultZoom);
 	}
-	else if(g_Config.m_ClDefaultZoom > 10)
+	else if(m_pClient->Config()->m_ClDefaultZoom > 10)
 	{
-		m_Zoom = pow(ZoomStep, g_Config.m_ClDefaultZoom - 10);
+		m_Zoom = pow(ZoomStep, m_pClient->Config()->m_ClDefaultZoom - 10);
 	}
 
 }

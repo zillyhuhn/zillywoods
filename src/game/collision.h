@@ -23,6 +23,7 @@ typedef bool (*CALLBACK_SWITCHACTIVE)(int Number, void *pUser);
 
 class CCollision
 {
+	class CConfig *m_pConfig;
 	class CTile *m_pTiles;
 	int m_Width;
 	int m_Height;
@@ -40,7 +41,7 @@ public:
 	};
 
 	CCollision();
-	void Init(class CLayers *pLayers);
+	void Init(class CConfig *pConfig, class CLayers *pLayers);
 	bool CheckPoint(float x, float y, int Id=TILE_SOLID) const { return IsTile(round_to_int(x), round_to_int(y), Id); }
 	bool CheckPoint(vec2 Pos, int Id=TILE_SOLID) const { return CheckPoint(Pos.x, Pos.y, Id); }
 	int GetCollisionAt(float x, float y) const { return GetTile(round_to_int(x), round_to_int(y)); }

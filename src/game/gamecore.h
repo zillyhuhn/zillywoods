@@ -147,6 +147,7 @@ public:
 
 class CCharacterCore
 {
+	class CConfig *m_pConfig;
 	CWorldCore *m_pWorld;
 	CCollision *m_pCollision;
 public:
@@ -170,7 +171,7 @@ public:
 
 	int m_TriggeredEvents;
 
-	void Init(CWorldCore *pWorld, CCollision *pCollision);
+	void Init(class CConfig *pConfig, CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);
 	void Move();

@@ -12,10 +12,10 @@ class CBinds : public CComponent
 	static void ConBind(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnbind(IConsole::IResult *pResult, void *pUserData);
 	static void ConUnbindAll(IConsole::IResult *pResult, void *pUserData);
-	static void ConDumpBinds(IConsole::IResult *pResult, void *pUserData);
+	static void ConBinds(IConsole::IResult *pResult, void *pUserData);
 	class IConsole *GetConsole() const { return Console(); }
 
-	static void ConfigSaveCallback(class IConfig *pConfig, void *pUserData);
+	static void ConfigSaveCallback(class IConfigManager *pConfigManager, void *pUserData);
 
 public:
 	CBinds();

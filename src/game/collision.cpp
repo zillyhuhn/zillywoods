@@ -44,6 +44,7 @@ CCollision::CCollision()
 
 	// DDRace
 
+	m_pConfig = 0;
 	m_pTele = 0;
 	m_pSpeedup = 0;
 	m_pFront = 0;
@@ -53,8 +54,9 @@ CCollision::CCollision()
 	m_pTune = 0;
 }
 
-void CCollision::Init(class CLayers *pLayers)
+void CCollision::Init(class CConfig *pConfig, class CLayers *pLayers)
 {
+	m_pConfig = pConfig;
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
@@ -483,7 +485,7 @@ int CCollision::IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision,
 		iy = round_to_int(Pos.y);
 
 		int Index = GetPureMapIndex(Pos);
-		if (g_Config.m_SvOldTeleportHook)
+		if (m_pConfig->m_SvOldTeleportHook)
 			*pTeleNr = IsTeleport(Index);
 		else
 			*pTeleNr = IsTeleportHook(Index);

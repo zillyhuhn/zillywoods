@@ -68,7 +68,7 @@ void CFlag::TickDefered()
 			}
 			else
 			{
-				m_Vel.y += GameWorld()->m_Core.m_Tuning[g_Config.m_ClDummy].m_Gravity;
+				m_Vel.y += GameWorld()->m_Core.m_Tuning[Config()->m_ClDummy].m_Gravity;
 				GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(ms_PhysSize, ms_PhysSize), 0.5f);
 			}
 		}

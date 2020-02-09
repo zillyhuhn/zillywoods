@@ -118,7 +118,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 
 		if(Multiple)
 			TextRender()->TextEx(&Cursor, ", ", -1);
-		if((g_Config.m_ClShowUserId || g_Config.m_Debug) && Cursor.m_LineCount <= Cursor.m_MaxLines)
+		if((Config()->m_ClShowUserId || Config()->m_Debug) && Cursor.m_LineCount <= Cursor.m_MaxLines)
 		{
 			Cursor.m_X += Cursor.m_FontSize;
 		}
@@ -156,7 +156,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 
 		if(Multiple)
 			TextRender()->TextEx(&Cursor, ", ", -1);
-		if((g_Config.m_ClShowUserId || g_Config.m_Debug) && Cursor.m_LineCount <= Cursor.m_MaxLines)
+		if((Config()->m_ClShowUserId || Config()->m_Debug) && Cursor.m_LineCount <= Cursor.m_MaxLines)
 		{
 			RenderTools()->DrawClientID(TextRender(), &Cursor, i);
 		}
@@ -166,7 +166,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 			TextRender()->TextColor(1.0f, 1.0f, (pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING) ? 0.0f : 1.0f, 0.7f);
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 		}
-		if(g_Config.m_ClShowAdmins && (pInfo->m_PlayerFlags&PLAYERFLAG_ADMIN))
+		if(Config()->m_ClShowAdmins && (pInfo->m_PlayerFlags&PLAYERFLAG_ADMIN))
 		{
 			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f);
 		}
@@ -232,7 +232,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float Spacing = 2.0f;
 	float PingOffset = x+Spacing, PingLength = 35.0f;
 	float CountryFlagOffset = PingOffset+PingLength, CountryFlagLength = 20.f;
-	float IdSize = (g_Config.m_ClShowUserId || g_Config.m_Debug) ? LineHeight : 0.0f;
+	float IdSize = (Config()->m_ClShowUserId || Config()->m_Debug) ? LineHeight : 0.0f;
 	float ReadyLength = ReadyMode ? 10.f : 0.f;
 	float TeeOffset = CountryFlagOffset+CountryFlagLength+4.0f, TeeLength = 25*TeeSizeMod;
 	float NameOffset = CountryFlagOffset+CountryFlagLength+IdSize, NameLength = 128.0f-IdSize/2-ReadyLength;
@@ -240,7 +240,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float KillOffset, KillLength;
 	float DeathOffset, DeathLength;
 	float ScoreOffset, ScoreLength;
-	if(g_Config.m_ClDDRaceScoreBoard)
+	if(Config()->m_ClDDRaceScoreBoard)
 	{
 		KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
 		DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
@@ -403,7 +403,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 					str_format(aBuf, sizeof(aBuf), "%d", Score);
 				}
 			}
-			if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
+			if(IsRaceGametype && Config()->m_ClDDRaceScoreBoard)
 			{
 				if(Score == -9999)
 					aBuf[0] = 0;
@@ -459,7 +459,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, pClanStr, -1, -1.0f);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, pClanStr, -1.0f);
 
-	if(!(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard) || !Race)
+	if(!(IsRaceGametype && Config()->m_ClDDRaceScoreBoard) || !Race)
 	{
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 		tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
@@ -472,7 +472,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	const char *pScoreStr = Race ? Localize("Time") : Localize("Score");
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, pScoreStr, -1, -1.0f);
-	if(g_Config.m_ClDDRaceScoreBoard)
+	if(Config()->m_ClDDRaceScoreBoard)
 	{
 		float ScoreWidth = TextRender()->TextWidth(0, HeadlineFontsize, Localize("Score"), -1, -1.0f);
 		tw = ScoreLength > ScoreWidth ? ScoreLength : ScoreWidth;
@@ -564,7 +564,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				CountryFlagOffset, y + CountrySpacing, LineHeight*1.5f, LineHeight*0.75f);
 
 			// custom client detection
-			if(g_Config.m_ClClientRecognition)
+			if(Config()->m_ClClientRecognition)
 			{
 				if(str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-1], "gamer!")
 				|| str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-2], "gamer!"))
@@ -634,7 +634,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
 
 			// id
-			if(g_Config.m_ClShowUserId || g_Config.m_Debug)
+			if(Config()->m_ClShowUserId || Config()->m_Debug)
 			{
 				TextRender()->SetCursor(&Cursor, NameOffset+TeeLength-IdSize+Spacing, y+Spacing, FontSize, TEXTFLAG_RENDER);
 				RenderTools()->DrawClientID(TextRender(), &Cursor, pInfo->m_ClientID);
@@ -642,7 +642,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// name
 			// admin detection
-			if(g_Config.m_ClShowAdmins && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_ADMIN))
+			if(Config()->m_ClShowAdmins && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_ADMIN))
 			{
 				if(HighlightedLine)
 					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
@@ -670,7 +670,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			Cursor.m_LineWidth = ClanLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-			if(!(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard) || !Race)
+			if(!(IsRaceGametype && Config()->m_ClDDRaceScoreBoard) || !Race)
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
@@ -697,7 +697,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			}
 			else
 			{
-				if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
+				if(IsRaceGametype && Config()->m_ClDDRaceScoreBoard)
 				{
 					if(pInfo->m_pPlayerInfo->m_Score == -9999)
 						aBuf[0] = 0;

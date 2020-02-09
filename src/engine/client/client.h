@@ -53,7 +53,7 @@ public:
 };
 
 
-class CClient : public IClient, public CDemoPlayer::IListner
+class CClient : public IClient, public CDemoPlayer::IListener
 {
 	// needed interfaces
 	IEngine *m_pEngine;
@@ -63,6 +63,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IEngineSound *m_pSound;
 	IGameClient *m_pGameClient;
 	IEngineMap *m_pMap;
+	IConfigManager *m_pConfigManager;
+	CConfig *m_pConfig;
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	IEngineMasterServer *m_pMasterServer;
@@ -84,6 +86,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CMapChecker m_MapChecker;
 
 	char m_aServerAddressStr[256];
+	char m_aServerPassword[128];
 
 	unsigned m_SnapshotParts[2];
 	int64 m_LocalStartTime;
@@ -167,8 +170,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CSnapshotStorage m_SnapshotStorage[2];
 	CSnapshotStorage::CHolder *m_aSnapshots[2][NUM_SNAPSHOT_TYPES];
 
-	int m_RecivedSnapshots[2];
-	char m_aSnapshotIncommingData[CSnapshot::MAX_SIZE];
+	int m_ReceivedSnapshots[2];
+	char m_aSnapshotIncomingData[CSnapshot::MAX_SIZE];
 
 	class CSnapshotStorage::CHolder m_aDemorecSnapshotHolders[NUM_SNAPSHOT_TYPES];
 	char *m_aDemorecSnapshotData[NUM_SNAPSHOT_TYPES][2][CSnapshot::MAX_SIZE];
@@ -204,6 +207,9 @@ public:
 	IEngineSound *Sound() { return m_pSound; }
 	IGameClient *GameClient() { return m_pGameClient; }
 	IEngineMasterServer *MasterServer() { return m_pMasterServer; }
+	IConfigManager *ConfigManager() { return m_pConfigManager; }
+	CConfig *Config() { return m_pConfig; }
+	IConsole *Console() { return m_pConsole; }
 	IStorage *Storage() { return m_pStorage; }
 
 	CClient();
@@ -215,7 +221,7 @@ public:
 	void SendEnterGame();
 	void SendReady();
 
-	virtual bool RconAuthed() const { return m_RconAuthed[g_Config.m_ClDummy] != 0; }
+	virtual bool RconAuthed() const { return m_RconAuthed[m_pConfig->m_ClDummy] != 0; }
 	virtual bool UseTempRconCommands() const { return m_UseTempRconCommands != 0; }
 	void RconAuth(const char *pName, const char *pPassword);
 	virtual void Rcon(const char *pCmd);
@@ -240,6 +246,7 @@ public:
 	// called when the map is loaded and we should init for a new round
 	void OnEnterGame();
 	virtual void EnterGame();
+	void OnClientOnline();
 
 	virtual void Connect(const char *pAddress);
 	void DisconnectWithReason(const char *pReason);
@@ -253,7 +260,7 @@ public:
 	int m_LastDummyConnectTime;
 	int SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient=1);
 
-	virtual void GetServerInfo(CServerInfo *pServerInfo) const;
+	virtual void GetServerInfo(CServerInfo *pServerInfo);
 
 	int LoadData();
 

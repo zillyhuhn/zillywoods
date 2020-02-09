@@ -59,7 +59,7 @@ void CPlayers::RenderHook(
 
 
 	// use preditect players if needed
-	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->m_LocalClientID == ClientID && Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter ||
 			(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
@@ -170,7 +170,7 @@ void CPlayers::RenderPlayer(
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
-		Angle = angle(m_pClient->m_pControls->m_MousePos[g_Config.m_ClDummy]);
+		Angle = angle(m_pClient->m_pControls->m_MousePos[Config()->m_ClDummy]);
 	}
 	else
 	{
@@ -196,7 +196,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// use preditect players if needed
-	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->m_LocalClientID == ClientID && Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		if(!m_pClient->m_Snap.m_pLocalCharacter ||
 			(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
@@ -272,18 +272,18 @@ void CPlayers::RenderPlayer(
 
 	// draw gun
 	{
-		if(m_pClient->m_pControls->m_ShowHookColl[g_Config.m_ClDummy] && m_pClient->m_LocalClientID == ClientID)
+		if(m_pClient->m_pControls->m_ShowHookColl[Config()->m_ClDummy] && m_pClient->m_LocalClientID == ClientID)
 		{
 			Graphics()->TextureClear();
 			vec2 initPos = Position + Direction * 42.0f;
-			vec2 finishPos = initPos + Direction * (m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookLength-60.0f);
+			vec2 finishPos = initPos + Direction * (m_pClient->m_Tuning[Config()->m_ClDummy].m_HookLength-60.0f);
 			Graphics()->LinesBegin();
 			Graphics()->SetColor(1.00f, 0.0f, 0.0f, 1.00f);
 
 
 			Graphics()->SetColor(1.00f, 0.0f, 0.0f, 1.00f);
 			int TeleNr = 0;
-			if(g_Config.m_ClDDracePrediction ?
+			if(Config()->m_ClDDracePrediction ?
 				Collision()->IntersectLineTeleHook(initPos, finishPos, &finishPos, 0x0, &TeleNr)
 				: Collision()->IntersectLine(initPos, finishPos, &finishPos, 0x0))
 			{
@@ -395,7 +395,7 @@ void CPlayers::RenderPlayer(
 				Recoil = sinf(a*pi);
 			p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Dir*Recoil*10.0f;
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
-			if (Player.m_Weapon == WEAPON_GUN && !g_Config.m_ClOldGunPosition)
+			if (Player.m_Weapon == WEAPON_GUN && !Config()->m_ClOldGunPosition)
 				p.y += 8;
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		}
@@ -456,7 +456,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// render the "shadow" tee
-	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_Debug)
+	if(m_pClient->m_LocalClientID == ClientID && Config()->m_Debug)
 	{
 		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;

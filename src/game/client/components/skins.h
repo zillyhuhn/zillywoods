@@ -49,9 +49,9 @@ public:
 	static const char * const ms_apSkinPartNames[NUM_SKINPARTS];
 	static const char * const ms_apColorComponents[NUM_COLOR_COMPONENTS];
 
-	static char * const ms_apSkinVariables[2][NUM_SKINPARTS];
-	static int * const ms_apUCCVariables[2][NUM_SKINPARTS]; // use custom color
-	static int * const ms_apColorVariables[2][NUM_SKINPARTS];
+	static char *ms_apSkinVariables[2][NUM_SKINPARTS];
+	static int *ms_apUCCVariables[2][NUM_SKINPARTS]; // use custom color
+	static int *ms_apColorVariables[2][NUM_SKINPARTS];
 	IGraphics::CTextureHandle m_XmasHatTexture;
 	IGraphics::CTextureHandle m_BotTexture;
 
@@ -74,6 +74,8 @@ public:
 
 	// returns true if everything was valid and nothing changed
 	bool ValidateSkinParts(char *aPartNames[NUM_SKINPARTS], int *aUseCustomColors, int* aPartColors, int GameFlags) const;
+
+	void SaveSkinfile(const char *pSaveSkinName);
 
 private:
 	int m_ScanningPart;
