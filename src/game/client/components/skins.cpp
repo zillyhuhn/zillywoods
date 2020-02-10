@@ -18,9 +18,9 @@
 const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body","skins");Localize("marking","skins");Localize("decoration","skins");Localize("hands","skins");Localize("feet","skins");Localize("eyes","skins"); */
 const char * const CSkins::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
 
-char *CSkins::ms_apSkinVariables[2][NUM_SKINPARTS] = {0};
-int *CSkins::ms_apUCCVariables[2][NUM_SKINPARTS] = {0};
-int *CSkins::ms_apColorVariables[2][NUM_SKINPARTS] = {0};
+char *CSkins::ms_apSkinVariables[2][NUM_SKINPARTS] = {{0}};
+int *CSkins::ms_apUCCVariables[2][NUM_SKINPARTS] = {{0}};
+int *CSkins::ms_apColorVariables[2][NUM_SKINPARTS] = {{0}};
 
 const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
