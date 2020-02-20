@@ -67,20 +67,13 @@ public:
 
 	// tick time access
 	// TODO: ZillyWoods
-	// inline int PrevGameTick() const { return m_PrevGameTick[Config()->m_ClDummy]; }
-	// inline int GameTick() const { return m_CurGameTick[Config()->m_ClDummy]; }
-	// inline int MenuTick() const { return m_CurMenuTick; }
-	// inline int PredGameTick() const { return m_PredTick[Config()->m_ClDummy]; }
-	// inline float IntraGameTick() const { return m_GameIntraTick[Config()->m_ClDummy]; }
-	// inline float PredIntraGameTick() const { return m_PredIntraTick[Config()->m_ClDummy]; }
-	// inline float GameTickTime() const { return m_GameTickTime[Config()->m_ClDummy]; }
-	inline int PrevGameTick() const { return m_PrevGameTick[0]; }
-	inline int GameTick() const { return m_CurGameTick[0]; }
+	inline int PrevGameTick() const { return m_PrevGameTick[g_Config.m_ClDummy]; }
+	inline int GameTick() const { return m_CurGameTick[g_Config.m_ClDummy]; }
 	inline int MenuTick() const { return m_CurMenuTick; }
-	inline int PredGameTick() const { return m_PredTick[0]; }
-	inline float IntraGameTick() const { return m_GameIntraTick[0]; }
-	inline float PredIntraGameTick() const { return m_PredIntraTick[0]; }
-	inline float GameTickTime() const { return m_GameTickTime[0]; }
+	inline int PredGameTick() const { return m_PredTick[g_Config.m_ClDummy]; }
+	inline float IntraGameTick() const { return m_GameIntraTick[g_Config.m_ClDummy]; }
+	inline float PredIntraGameTick() const { return m_PredIntraTick[g_Config.m_ClDummy]; }
+	inline float GameTickTime() const { return m_GameTickTime[g_Config.m_ClDummy]; }
 	inline int GameTickSpeed() const { return m_GameTickSpeed; }
 
 	// other time access

@@ -6,6 +6,7 @@
 #include <engine/shared/config.h>
 #include <game/version.h>
 
+CConfig g_Config;
 
 void EscapeParam(char *pDst, const char *pSrc, int size)
 {

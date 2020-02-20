@@ -471,6 +471,8 @@ void CGameClient::OnDummySwap()
 	int tmp = m_DummyInput.m_Fire;
 	m_DummyInput = m_pControls->m_InputData[Config()->m_ClDummy];
 	m_pControls->m_InputData[!Config()->m_ClDummy].m_Fire = tmp;
+	g_Config.m_ClDummy = Config()->m_ClDummy;
+	dbg_msg("dummyswap", "switched dummy to cfg()->%d cfg.%d", Config()->m_ClDummy, g_Config.m_ClDummy);
 }
 
 int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)

@@ -15,6 +15,8 @@ public:
 	#undef MACRO_CONFIG_STR
 };
 
+extern CConfig g_Config;
+
 enum
 {
 	CFGFLAG_SAVE=1,
