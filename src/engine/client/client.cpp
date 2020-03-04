@@ -819,8 +819,6 @@ void CClient::DebugRender()
 	if(!m_pConfig->m_Debug)
 		return;
 	static IGraphics::CTextureHandle s_Font = Graphics()->LoadTexture("ui/debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
-	char aBuffer[256];
-	int64 Now = time_get();
 
 	//m_pGraphics->BlendNormal();
 	Graphics()->TextureSet(s_Font);
