@@ -12,6 +12,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/jsonwriter.h>
 
+#include "menus.h"
 #include "skins.h"
 
 
@@ -209,6 +210,10 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	return 0;
 }
 
+int CSkins::GetInitAmount() const
+{
+	return NUM_SKINPARTS*2 + 8;
+}
 
 void CSkins::OnInit()
 {
@@ -279,6 +284,7 @@ void CSkins::OnInit()
 			DummySkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(DummySkinPart);
 		}
+		m_pClient->m_pMenus->RenderLoading(2);
 	}
 
 	// create dummy skin
@@ -297,10 +303,12 @@ void CSkins::OnInit()
 		m_DummySkin.m_aPartColors[p] = p==SKINPART_MARKING ? (255<<24)+65408 : 65408;
 		m_DummySkin.m_aUseCustomColors[p] = 0;
 	}
+	m_pClient->m_pMenus->RenderLoading(1);
 
 	// load skins
 	m_aSkins.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins", SkinScan, this);
+	m_pClient->m_pMenus->RenderLoading(5);
 
 	// add dummy skin
 	if(!m_aSkins.size())
@@ -324,6 +332,7 @@ void CSkins::OnInit()
 			m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 		}
 	}
+	m_pClient->m_pMenus->RenderLoading(1);
 
 	{
 		// add bot decoration
@@ -343,6 +352,7 @@ void CSkins::OnInit()
 			m_BotTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 		}
 	}
+	m_pClient->m_pMenus->RenderLoading(1);
 }
 
 void CSkins::AddSkin(const char *pSkinName)
