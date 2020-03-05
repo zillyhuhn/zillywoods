@@ -361,6 +361,8 @@ void CGameClient::OnConsoleInit()
 
 void CGameClient::OnInit()
 {
+	Client()->InitConfig(Config());
+
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 
 	// propagate pointers

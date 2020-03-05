@@ -33,6 +33,9 @@ protected:
 	float m_RenderFrameTime;
 
 	int m_GameTickSpeed;
+
+	class CConfig *m_pConfig;
+
 public:
 
 	class CSnapItem
@@ -65,22 +68,17 @@ public:
 	//
 	inline int State() const { return m_State; }
 
+	void InitConfig(CConfig *pConfig) { m_pConfig = pConfig; }
+
 	// tick time access
-	// TODO: ZillyWoods
-	// inline int PrevGameTick() const { return m_PrevGameTick[Config()->m_ClDummy]; }
-	// inline int GameTick() const { return m_CurGameTick[Config()->m_ClDummy]; }
-	// inline int MenuTick() const { return m_CurMenuTick; }
-	// inline int PredGameTick() const { return m_PredTick[Config()->m_ClDummy]; }
-	// inline float IntraGameTick() const { return m_GameIntraTick[Config()->m_ClDummy]; }
-	// inline float PredIntraGameTick() const { return m_PredIntraTick[Config()->m_ClDummy]; }
-	// inline float GameTickTime() const { return m_GameTickTime[Config()->m_ClDummy]; }
-	inline int PrevGameTick() const { return m_PrevGameTick[0]; }
-	inline int GameTick() const { return m_CurGameTick[0]; }
+	inline int PrevGameTick() { return m_PrevGameTick[m_pConfig->m_ClDummy]; }
+	inline int GameTick() { return m_CurGameTick[m_pConfig->m_ClDummy]; }
+	inline int PredGameTick() { return m_PredTick[m_pConfig->m_ClDummy]; }
+	inline float IntraGameTick() { return m_GameIntraTick[m_pConfig->m_ClDummy]; }
+	inline float PredIntraGameTick() { return m_PredIntraTick[m_pConfig->m_ClDummy]; }
+	inline float GameTickTime() { return m_GameTickTime[m_pConfig->m_ClDummy]; }
+
 	inline int MenuTick() const { return m_CurMenuTick; }
-	inline int PredGameTick() const { return m_PredTick[0]; }
-	inline float IntraGameTick() const { return m_GameIntraTick[0]; }
-	inline float PredIntraGameTick() const { return m_PredIntraTick[0]; }
-	inline float GameTickTime() const { return m_GameTickTime[0]; }
 	inline int GameTickSpeed() const { return m_GameTickSpeed; }
 
 	// other time access
