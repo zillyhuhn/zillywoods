@@ -1964,7 +1964,7 @@ void CClient::PumpNetwork()
 		{
 			if(!(Packet.m_Flags&NETSENDFLAG_CONNLESS))
 			{
-				if(i != m_pConfig->m_ClDummy)
+				if(i != Config()->m_ClDummy)
 					ProcessServerPacketDummy(&Packet);
 				else
 					ProcessServerPacket(&Packet);
