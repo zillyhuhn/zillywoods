@@ -1923,10 +1923,7 @@ void CGameClient::SendStartInfo(bool IsDummy)
 		Msg.m_Country = Config()->m_DummyCountry;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if(!str_comp(CSkins::ms_apSkinVariables[1][p], "standard"))
-				Msg.m_apSkinPartNames[p] = aClientStr;
-			else
-				Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[1][p];
+			Msg.m_apSkinPartNames[p] = m_pSkins->IsSkinPartDefault(IsDummy, p) ? aClientStr : CSkins::ms_apSkinVariables[IsDummy][p];
 			Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[1][p];
 			Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[1][p];
 		}
@@ -1941,10 +1938,7 @@ void CGameClient::SendStartInfo(bool IsDummy)
 		Msg.m_Country = Config()->m_PlayerCountry;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if((p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[0][p], "standard"))
-				Msg.m_apSkinPartNames[p] = aClientStr;
-			else
-				Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[0][p];
+			Msg.m_apSkinPartNames[p] = m_pSkins->IsSkinPartDefault(IsDummy, p) ? aClientStr : CSkins::ms_apSkinVariables[IsDummy][p];
 			Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[0][p];
 			Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[0][p];
 		}

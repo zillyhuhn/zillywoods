@@ -77,6 +77,8 @@ public:
 
 	void SaveSkinfile(const char *pSaveSkinName);
 
+	bool IsSkinPartDefault(int Dummy, int Part);
+
 private:
 	int m_ScanningPart;
 	sorted_array<CSkinPart> m_aaSkinParts[NUM_SKINPARTS];
