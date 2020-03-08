@@ -1923,7 +1923,7 @@ void CGameClient::SendStartInfo(bool IsDummy)
 		Msg.m_Country = Config()->m_DummyCountry;
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			if((p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[1][p], "standard"))
+			if(!str_comp(CSkins::ms_apSkinVariables[1][p], "standard"))
 				Msg.m_apSkinPartNames[p] = aClientStr;
 			else
 				Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[1][p];

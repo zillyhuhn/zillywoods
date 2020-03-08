@@ -566,27 +566,44 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			// custom client detection
 			if(Config()->m_ClClientRecognition)
 			{
-				if(str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-1], "gamer!")
-				|| str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-2], "gamer!"))
+				bool Found = false;
+				for (int Client = 0; Client < 3; Client++)
 				{
-					// gamer symbol
-					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CLIENTICONS].m_Id);
-					Graphics()->QuadsBegin();
-					RenderTools()->SelectSprite(SPRITE_GAMER);
-					IGraphics::CQuadItem QuadItem(CountryFlagOffset + 30.0f-10.0f, y, 10, 10);
-					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();
-				}
-				else if(str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-1], "zilly!")
-				|| str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-2], "zilly!"))
-				{
-					// zilly symbol
-					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CLIENTICONS].m_Id);
-					Graphics()->QuadsBegin();
-					RenderTools()->SelectSprite(SPRITE_ZILLY);
-					IGraphics::CQuadItem QuadItem(CountryFlagOffset + 30.0f-10.0f, y, 10, 10);
-					Graphics()->QuadsDrawTL(&QuadItem, 1);
-					Graphics()->QuadsEnd();
+					const char* pClientString = "";
+					int Sprite = -1;
+					switch (Client)
+					{
+					case 0:
+						pClientString = "gamer!";
+						Sprite = SPRITE_GAMER;
+						break;
+					case 1:
+						pClientString = "zilly!";
+						Sprite = SPRITE_ZILLY;
+						break;
+					case 2:
+						pClientString = "fclient!";
+						Sprite = SPRITE_FCLIENT;
+						break;
+					}
+
+					for (int p = 0; p < NUM_SKINPARTS; p++)
+					{
+						if (str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[p], pClientString))
+						{
+							Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CLIENTICONS].m_Id);
+							Graphics()->QuadsBegin();
+							RenderTools()->SelectSprite(Sprite);
+							IGraphics::CQuadItem QuadItem(CountryFlagOffset + 30.0f - 10.0f, y, 10, 10);
+							Graphics()->QuadsDrawTL(&QuadItem, 1);
+							Graphics()->QuadsEnd();
+							Found = true;
+							break;
+						}
+					}
+
+					if (Found)
+						break;
 				}
 			}
 
