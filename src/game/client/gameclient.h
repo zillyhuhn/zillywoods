@@ -8,6 +8,7 @@
 #include <engine/console.h>
 #include <game/layers.h>
 #include <game/gamecore.h>
+#include <game/teamscore.h>
 #include "render.h"
 
 class CGameClient : public IGameClient
@@ -149,6 +150,7 @@ public:
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
 		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
+		CPlayerInfoItem m_paInfoByDDTeam[MAX_CLIENTS];
 
 		// spectate data
 		struct CSpectateInfo
@@ -332,6 +334,10 @@ public:
 	void SendTimeoutCode();
 	bool m_SentTimeoutCode;
 	bool IsRaceGametype();
+	class CTeamsCore m_Teams;
+
+private:
+	bool m_DDraceMsgSent[2];
 };
 
 

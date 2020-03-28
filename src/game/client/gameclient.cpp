@@ -443,6 +443,9 @@ void CGameClient::OnInit()
 	m_IsXmasDay = time_isxmasday();
 	m_IsEasterDay = time_iseasterday();
 	m_pMenus->RenderLoading();
+
+	m_DDraceMsgSent[0] = false;
+	m_DDraceMsgSent[1] = false;
 }
 
 void CGameClient::OnUpdate()
@@ -581,6 +584,12 @@ void CGameClient::OnReset()
 	// ZillyWoods
 
 	m_SentTimeoutCode = false;
+
+	// DDRace
+
+	m_Teams.Reset();
+	m_DDraceMsgSent[0] = false;
+	m_DDraceMsgSent[1] = false;
 }
 
 void CGameClient::UpdatePositions()
@@ -673,6 +682,7 @@ void CGameClient::OnRender()
 void CGameClient::OnDummyDisconnect()
 {
 	m_LastNewPredictedTick[1] = -1;
+	m_DDraceMsgSent[1] = false;
 }
 
 void CGameClient::OnRelease()
@@ -1106,6 +1116,30 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 		DoLeaveMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_pReason);
 		m_pStats->OnPlayerLeave(pMsg->m_ClientID);
 	}
+	else if(MsgId == NETMSGTYPE_SV_TEAMSSTATE)
+	{
+		unsigned int i;
+
+		for(i = 0; i < MAX_CLIENTS; i++)
+		{
+			int Team = pUnpacker->GetInt();
+			bool WentWrong = false;
+
+			if(pUnpacker->Error())
+				WentWrong = true;
+
+			if(!WentWrong && Team >= 0 && Team < MAX_CLIENTS)
+				m_Teams.Team(i, Team);
+			else if(Team != MAX_CLIENTS)
+				WentWrong = true;
+
+			if(WentWrong)
+			{
+				m_Teams.Team(i, 0);
+				break;
+			}
+		}
+	}
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -1517,6 +1551,17 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
+	// sort player infos by DDRace Team (and score between)
+	int Index = 0;
+	for(int Team = 0; Team <= MAX_CLIENTS; ++Team)
+	{
+		for(int i = 0; i < MAX_CLIENTS && Index < MAX_CLIENTS; ++i)
+		{
+			if(m_Snap.m_aInfoByScore[i].m_pPlayerInfo && m_Teams.Team(m_Snap.m_aInfoByScore[i].m_ClientID) == Team)
+				m_Snap.m_paInfoByDDTeam[Index++] = m_Snap.m_aInfoByScore[i];
+		}
+	}
+
 	// calc some player stats
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
@@ -1551,6 +1596,18 @@ void CGameClient::OnNewSnapshot()
 		m_ServerMode = SERVERMODE_PURE;
 	else
 		m_ServerMode = SERVERMODE_PUREMOD;
+
+	// send the server that we are a ddrace client
+	for(int i = 0; i < 2; i++)
+	{
+		if(!m_DDraceMsgSent[i] && m_Snap.m_pLocalInfo && (Client()->DummyConnected() || i != 1))
+		{
+			CMsgPacker Msg(NETMSGTYPE_CL_ISDDRACE, false);
+			Msg.AddInt(DDRACE_VERSION);
+			Client()->SendMsgExY(&Msg, MSGFLAG_VITAL, i);
+			m_DDraceMsgSent[i] = true;
+		}
+	}
 
 	if(!m_SentTimeoutCode && m_ServerMode == SERVERMODE_MOD)
 		SendTimeoutCode();

@@ -490,4 +490,8 @@ Messages = [
 	NetMessageEx("Sv_MyOwnMessage", "my-own-message@heinrich5991.de", [
 		NetIntAny("m_Test"),
 	]),
+
+	NetMessageEx("Cl_IsDDrace", "isddrace@ddnet.tw", []),
+
+	NetMessageEx("Sv_TeamsState", "teamstate@ddnet.tw", [])
 ]

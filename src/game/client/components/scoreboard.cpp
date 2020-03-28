@@ -17,6 +17,8 @@
 #include <game/client/components/motd.h>
 #include <game/client/components/stats.h>
 
+#include <base/color.h>
+
 #include "menus.h"
 #include "stats.h"
 #include "scoreboard.h"
@@ -497,7 +499,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			// make sure that we render the correct team
-			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
+			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_paInfoByDDTeam[i];
 			if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team || (!RenderDead && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)) ||
 				(RenderDead && !(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)))
 				continue;
@@ -514,14 +516,81 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		rendered = -32;
 	if(upper24)
 		rendered = -24;
+
+	int OldDDTeam = -1;
+
 	for(int i = 0 ; i < NumRenderScoreIDs ; i++)
 	{
-		if(rendered++ < 0) continue;
 		if(RenderScoreIDs[i] >= 0)
 		{
-			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[RenderScoreIDs[i]];
+			if(rendered++ < 0) continue;
+
+			// make sure that we render the correct team
+			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_paInfoByDDTeam[RenderScoreIDs[i]];
+
 			bool RenderDead = pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD;
 			float ColorAlpha = RenderDead ? 0.5f : 1.0f;
+
+			int DDTeam = m_pClient->m_Teams.Team(pInfo->m_ClientID);
+			int NextDDTeam = 0;
+
+			for(int j = i + 1; j < NumRenderScoreIDs; j++)
+			{
+				const CGameClient::CPlayerInfoItem *pInfo2 = &m_pClient->m_Snap.m_paInfoByDDTeam[RenderScoreIDs[j]];
+
+				if(!pInfo2 || m_pClient->m_aClients[pInfo2->m_ClientID].m_Team != Team)
+					continue;
+
+				NextDDTeam = m_pClient->m_Teams.Team(pInfo2->m_ClientID);
+				break;
+			}
+
+			if(OldDDTeam == -1)
+			{
+				for(int j = i - 1; j >= 0; j--)
+				{
+					const CGameClient::CPlayerInfoItem *pInfo2 = &m_pClient->m_Snap.m_paInfoByDDTeam[RenderScoreIDs[j]];
+
+					if(!pInfo2 || m_pClient->m_aClients[pInfo2->m_ClientID].m_Team != Team)
+						continue;
+
+					OldDDTeam = m_pClient->m_Teams.Team(pInfo2->m_ClientID);
+					break;
+				}
+			}
+
+			if(DDTeam != TEAM_FLOCK)
+			{
+				vec3 rgb = HslToRgb(vec3(DDTeam / 64.0f, 1.0f, 0.5f));
+				int Corners = 0;
+
+				if(OldDDTeam != DDTeam)
+					Corners |= CUI::CORNER_TL | CUI::CORNER_TR;
+				if(NextDDTeam != DDTeam)
+					Corners |= CUI::CORNER_BL | CUI::CORNER_BR;
+
+				CUIRect Rect = {x, y, w, LineHeight};
+				if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 32)
+					RenderTools()->DrawUIRect(&Rect, vec4(rgb.r, rgb.g, rgb.b, 0.75f*ColorAlpha), Corners, 3.0f);
+				else
+					RenderTools()->DrawUIRect(&Rect, vec4(rgb.r, rgb.g, rgb.b, 0.75f*ColorAlpha), Corners, 5.0f);
+
+				if(NextDDTeam != DDTeam)
+				{
+					char aBuf[64];
+					//if(m_pClient->m_GameInfo.m_aTeamSize[0] > 8)
+					{
+						str_format(aBuf, sizeof(aBuf),"%d", DDTeam);
+						TextRender()->SetCursor(&Cursor, x, y + Spacing + FontSize - (FontSize/1.5f), FontSize/1.5f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+						Cursor.m_LineWidth = NameLength+3;
+					}
+					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+					TextRender()->TextEx(&Cursor, aBuf, -1);
+				}
+			}
+
+			OldDDTeam = DDTeam;
+
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 			// color for text
