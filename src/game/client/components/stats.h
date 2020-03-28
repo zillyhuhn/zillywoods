@@ -56,6 +56,10 @@ private:
 	static void ConKeyStats(IConsole::IResult *pResult, void *pUserData);
 	void AutoStatScreenshot();
 
+	// ZillyWoods
+
+	void RenderStatboard(int OffsetX = 0, bool IsUpper = false);
+
 public:
 	CStats();
 	bool IsActive() const;

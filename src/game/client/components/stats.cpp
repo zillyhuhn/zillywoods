@@ -110,41 +110,10 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 	}
 }
 
-void CStats::OnRender()
+void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 {
-	// auto stat screenshot stuff
-	if(Config()->m_ClAutoStatScreenshot)
-	{
-		// on game over, wait three seconds
-		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
-			m_ScreenshotTime = time_get()+time_freq()*3;
-
-		// when rendered, take screenshot once
-		if(!m_ScreenshotTaken && m_ScreenshotTime > -1 && m_ScreenshotTime+time_freq()/5 < time_get())
-		{
-			AutoStatScreenshot();
-			m_ScreenshotTaken = true;
-		}
-	}
-
-	// don't render scoreboard if menu is open
-	if(m_pClient->m_pMenus->IsActive())
-		return;
-
-	// postpone the active state till the render area gets updated during the rendering
-	if(m_Activate)
-	{
-		m_Active = true;
-		m_Activate = false;
-	}
-
-	if(!IsActive())
-		return;
-
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
-	float w = 250.0f;
-	float h = 750.0f;
 
 	int apPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
@@ -159,6 +128,9 @@ void CStats::OnRender()
 		apPlayers[NumPlayers] = i;
 		NumPlayers++;
 	}
+	bool IsSplit = NumPlayers > 16;
+	float w = IsSplit ? 100.0f : 250.0f;
+	float h = IsSplit ? 850.0f : 750.0f;
 
 	for(int i=0; i<9; i++)
 		if(Config()->m_ClStatboardInfos & (1<<i))
@@ -204,7 +176,7 @@ void CStats::OnRender()
 			w += 10;
 	}
 
-	float x = Width/2-w/2;
+	float x = OffsetX+(Width/2-w/2);
 	float y = 200.0f;
 
 	Graphics()->MapScreen(0, 0, Width, Height);
@@ -212,11 +184,16 @@ void CStats::OnRender()
 	Graphics()->BlendNormal();
 	{
 		CUIRect Rect = {x-10.f, y-10.f, w, h};
-		RenderTools()->DrawRoundRect(&Rect, vec4(0,0,0,0.5f), 17.0f);
+		if(!IsSplit)
+			RenderTools()->DrawRoundRect(&Rect, vec4(0,0,0,0.5f), 17.0f);
+		else if(IsUpper)
+			RenderTools()->DrawUIRect(&Rect, vec4(0,0,0,0.5f), CUI::CORNER_R, 17.0f);
+		else if(!IsUpper)
+			RenderTools()->DrawUIRect(&Rect, vec4(0,0,0,0.5f), CUI::CORNER_L, 17.0f);
 	}
 
 	float tw;
-	int px = 325;
+	int px = IsSplit ? 200 : 325;
 
 	TextRender()->Text(0, x+10, y-5, 20.0f, Localize("Name"), -1.0f);
 	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
@@ -305,8 +282,10 @@ void CStats::OnRender()
 		TeeSizemod = 0.4f;
 		TeeOffset = -14.0f;
 	}
+	int rendered = IsUpper?-32:0;
 	for(int j=0; j<NumPlayers; j++)
 	{
+		if (rendered++ < 0) continue;
 		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
 		const bool HighlightedLine = apPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
@@ -329,7 +308,7 @@ void CStats::OnRender()
 		Cursor.m_LineWidth = 220;
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[apPlayers[j]].m_aName, -1);
 
-		px = 325;
+		px = IsSplit ? 200 : 325;
 		if(Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
 		{
 			if(Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
@@ -498,6 +477,59 @@ void CStats::OnRender()
 			px += 100;
 		}
 		y += LineHeight;
+		if (rendered == 32) break;
+	}
+}
+
+void CStats::OnRender()
+{
+	// auto stat screenshot stuff
+	if(Config()->m_ClAutoStatScreenshot)
+	{
+		// on game over, wait three seconds
+		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+			m_ScreenshotTime = time_get()+time_freq()*3;
+
+		// when rendered, take screenshot once
+		if(!m_ScreenshotTaken && m_ScreenshotTime > -1 && m_ScreenshotTime+time_freq()/5 < time_get())
+		{
+			AutoStatScreenshot();
+			m_ScreenshotTaken = true;
+		}
+	}
+
+	// don't render scoreboard if menu is open
+	if(m_pClient->m_pMenus->IsActive())
+		return;
+
+	// postpone the active state till the render area gets updated during the rendering
+	if(m_Activate)
+	{
+		m_Active = true;
+		m_Activate = false;
+	}
+
+	if(!IsActive())
+		return;
+
+	int NumPlayers = 0;
+	for(int i=0; i<MAX_CLIENTS; i++)
+	{
+		if(!m_pClient->m_aClients[i].m_Active)
+			continue;
+		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			continue;
+		NumPlayers++;
+	}
+
+	if(NumPlayers > 16)
+	{
+		RenderStatboard(-350, false);
+		RenderStatboard(350, true);
+	}
+	else
+	{
+		RenderStatboard();
 	}
 }
 
