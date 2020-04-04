@@ -133,7 +133,7 @@ void CFileCollection::AddEntry(int64 Timestamp)
 			}
 			else
 			{
-				char aBuf[512];
+				char aBuf[IO_MAX_PATH_LENGTH];
 				char aTimestring[TIMESTAMP_LENGTH];
 				BuildTimestring(m_aTimestamps[0], aTimestring);
 
