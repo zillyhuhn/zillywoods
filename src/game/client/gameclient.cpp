@@ -937,7 +937,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 				return;
 			}
 
-			if(m_LocalClientID != -1 && !(pMsg->m_Silent && !Config()->m_ClShowSilentMessages))
+			if(m_LocalClientID != -1 && !(pMsg->m_Silent && !ShowSilentMessage()))
 			{
 				DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team, pMsg->m_Silent);
 
@@ -998,7 +998,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 			return;
 		}
 
-		if(!(pMsg->m_Silent && !Config()->m_ClShowSilentMessages))
+		if(!(pMsg->m_Silent && !ShowSilentMessage()))
 		{
 			DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason, pMsg->m_Silent);
 
@@ -1087,7 +1087,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, bool IsDummy)
 			}
 		}
 
-		if(!(pMsg->m_Silent && !Config()->m_ClShowSilentMessages))
+		if(!(pMsg->m_Silent && !ShowSilentMessage()))
 		{
 			DoTeamChangeMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_Team, pMsg->m_Silent);
 		}
@@ -2197,6 +2197,15 @@ bool CGameClient::IsRaceGametype()
 	CServerInfo Info;
 	Client()->GetServerInfo(&Info);
 	if(str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap"))
+		return true;
+	return false;
+}
+
+bool CGameClient::ShowSilentMessage()
+{
+	if(Config()->m_ClShowSilentMessages == 2)
+		return true;
+	if(Config()->m_ClShowSilentMessages == 1 && !IsRaceGametype())
 		return true;
 	return false;
 }

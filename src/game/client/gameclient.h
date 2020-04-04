@@ -334,6 +334,7 @@ public:
 	void SendTimeoutCode();
 	bool m_SentTimeoutCode;
 	bool IsRaceGametype();
+	bool ShowSilentMessage();
 	class CTeamsCore m_Teams;
 
 private:
