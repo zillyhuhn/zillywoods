@@ -242,18 +242,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float KillOffset, KillLength;
 	float DeathOffset, DeathLength;
 	float ScoreOffset, ScoreLength;
-	if(Config()->m_ClDDRaceScoreBoard)
-	{
-		KillOffset = ClanOffset+ClanLength, KillLength = 24.0f;
-		DeathOffset = KillOffset+KillLength, DeathLength = 24.0f;
-		ScoreOffset = DeathOffset+DeathLength, ScoreLength = TextRender()->TextWidth(0, HeadlineFontsize, "00:00:0", -1, -1.0f);
-	}
-	else
-	{
-		KillOffset = ClanOffset+ClanLength, KillLength = Race ? 0.0f : 24.0f;
-		DeathOffset = KillOffset+KillLength, DeathLength = Race ? 0.0f : 24.0f;
-		ScoreOffset = DeathOffset+DeathLength, ScoreLength = Race ? 83.0f : 35.0f;
-	}
+	bool IsCfgRace = IsRaceGametype && Config()->m_ClDDRaceScoreBoard;
+	KillOffset = ClanOffset+ClanLength, KillLength = (Race || IsCfgRace) ? 0.0f : 24.0f;
+	DeathOffset = KillOffset+KillLength, DeathLength = (Race || IsCfgRace) ? 0.0f : 24.0f;
+	ScoreOffset = DeathOffset+DeathLength, ScoreLength = (Race || IsCfgRace) ? 83.0f : 35.0f;
 	float tw = 0.0f;
 	float CountrySpacing = 3.0f;
 	int Clamp = 16;
@@ -461,7 +453,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, pClanStr, -1, -1.0f);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, pClanStr, -1.0f);
 
-	if(!(IsRaceGametype && Config()->m_ClDDRaceScoreBoard) || !Race)
+	if(!(IsRaceGametype && Config()->m_ClDDRaceScoreBoard) && !Race)
 	{
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 		tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
@@ -756,7 +748,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			Cursor.m_LineWidth = ClanLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-			if(!(IsRaceGametype && Config()->m_ClDDRaceScoreBoard) || !Race)
+			if(!(IsRaceGametype && Config()->m_ClDDRaceScoreBoard) && !Race)
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
