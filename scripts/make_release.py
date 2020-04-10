@@ -220,8 +220,8 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
 	copy_tree(maps_dir, serverbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/teeworlds_srv.icns", serverbundle_resource_dir)
-	shutil.copy(source_package_dir+name+"_srv"+exe_ext, serverbundle_bin_dir)
-	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
+	shutil.copy(source_package_dir+"teeworlds_srv"+exe_ext, serverbundle_bin_dir)
+	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/teeworlds_server")
 	open(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -230,7 +230,7 @@ if use_bundle:
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>zillywoods_server</string>
+	<string>teeworlds_server</string>
 	<key>CFBundleIconFile</key>
 	<string>TeeWorlds_srv</string>
 	<key>CFBundleInfoDictionaryVersion</key>
