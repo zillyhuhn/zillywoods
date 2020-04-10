@@ -8,7 +8,7 @@
 #define GAME_NETVERSION "0.7 " GAME_NETVERSION_HASH_FORCED
 #define CLIENT_VERSION 0x0704
 #define SETTINGS_FILENAME "settings_zilly"
-#define ZILLYWOODS_VERSION "0008-dev"
+#define ZILLYWOODS_VERSION "0008"
 #define DDRACE_VERSION 1
 static const char GAME_RELEASE_VERSION[8] = "0.7.4";
 #endif
