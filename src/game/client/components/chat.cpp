@@ -1026,6 +1026,18 @@ void CChat::OnRender()
 				TextRender()->TextEx(&InfoCursor, Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."), -1);
 			}
 		}
+
+		if(Config()->m_ClRuski)
+		{
+			// render russian/german keyboard layout
+			float ks = 0.3;
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_KEYBOARD].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1,1,1,0.5);
+			IGraphics::CQuadItem QuadItem(220, 90, 902*ks, 310*ks);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
 	}
 
 	y -= 8.0f;

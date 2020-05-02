@@ -279,6 +279,7 @@ container.images.Add(image_levelicons)
 container.images.Add(image_sidebaricons)
 container.images.Add(image_chatwhisper)
 container.images.Add(Image("raceflag", "race_flag.png"))
+container.images.Add(Image("keyboard", "keyboard.png"))
 container.images.Add(image_timerclock)
 
 container.pickups.Add(Pickup("health"))
