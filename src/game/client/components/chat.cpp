@@ -83,8 +83,8 @@ void CChat::OnReset()
 	m_CommandManager.AddCommand("mute", "Mute a player", "s[name]", &Com_Mute, this);
 	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r[message]", &Com_Reply, this);
 	m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
-	m_CommandManager.AddCommand("w", "Whisper another player", "s[name]", &Com_Whisper, this);
-	m_CommandManager.AddCommand("whisper", "Whisper another player", "s[name]", &Com_Whisper, this);
+	m_CommandManager.AddCommand("w", "Whisper another player", "r[name]", &Com_Whisper, this);
+	m_CommandManager.AddCommand("whisper", "Whisper another player", "r[name]", &Com_Whisper, this);
 }
 
 void CChat::OnMapLoad()
@@ -252,6 +252,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		}
 		else
 		{
+			m_pHistoryEntry = 0x0;
 			m_Mode = CHAT_NONE;
 			m_pClient->OnRelease();
 		}
@@ -428,7 +429,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
-		if(IsTypingCommand())
+		if(IsTypingCommand() && !m_pHistoryEntry)
 		{
 			PreviousActiveCommand(&m_SelectedCommand);
 			if(m_SelectedCommand < 0)
@@ -452,7 +453,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	else if (Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
 	{
-		if(IsTypingCommand())
+		if(IsTypingCommand() && !m_pHistoryEntry)
 		{
 			NextActiveCommand(&m_SelectedCommand);
 			if(m_SelectedCommand >= m_CommandManager.CommandCount())
@@ -531,6 +532,7 @@ void CChat::ServerCommandCallback(IConsole::IResult *pResult, void *pContext)
 	Msg.m_Arguments = pComContext->m_pArgs;
 	pChatData->Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 
+	pChatData->m_pHistoryEntry = 0x0;
 	pChatData->m_Mode = CHAT_NONE;
 	pChatData->m_pClient->OnRelease();
 }
@@ -1020,10 +1022,8 @@ void CChat::OnRender()
 				CTextCursor InfoCursor;
 				TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
 
-				char aInfoText[128];
-				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."));
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
+				TextRender()->TextEx(&InfoCursor, Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."), -1);
 			}
 		}
 	}

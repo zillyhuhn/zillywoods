@@ -97,8 +97,6 @@ private:
 
 	float ButtonFade(CButtonContainer *pBC, float Seconds, int Checked=0);
 
-
-	int DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const CUIRect *pRect);
 	int DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
 	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
 	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend=true);
@@ -287,20 +285,14 @@ private:
 	enum
 	{
 		POPUP_NONE=0,
+		POPUP_MESSAGE, // generic message popup (one button)
+		POPUP_CONFIRM, // generic confirmation popup (two buttons)
 		POPUP_FIRST_LAUNCH,
 		POPUP_CONNECTING,
-		POPUP_MESSAGE,
-		POPUP_DISCONNECTED,
-		POPUP_PURE,
 		POPUP_LANGUAGE,
 		POPUP_COUNTRY,
-		POPUP_DELETE_DEMO,
 		POPUP_RENAME_DEMO,
-		POPUP_REMOVE_FRIEND,
-		POPUP_REMOVE_FILTER,
 		POPUP_SAVE_SKIN,
-		POPUP_DELETE_SKIN,
-		POPUP_SOUNDERROR,
 		POPUP_PASSWORD,
 		POPUP_QUIT,
 	};
@@ -348,6 +340,31 @@ private:
 	bool m_SkinModified;
 	bool m_KeyReaderWasActive;
 	bool m_KeyReaderIsActive;
+
+	// generic popups
+	typedef void (CMenus::*FPopupButtonCallback)();
+	void DefaultButtonCallback() { /* do nothing */ };
+	enum
+	{
+		BUTTON_CONFIRM = 0, // confirm / yes / close
+		BUTTON_CANCEL, // cancel / no
+		NUM_BUTTONS
+	};
+	char m_aPopupTitle[128];
+	char m_aPopupMessage[256];
+	struct
+	{
+		char m_aLabel[64];
+		int m_NextPopup;
+		FPopupButtonCallback m_pfnCallback;
+	} m_aPopupButtons[NUM_BUTTONS];
+
+	void PopupMessage(const char *pTitle, const char *pMessage,
+		const char *pButtonLabel, int NextPopup = POPUP_NONE, FPopupButtonCallback pfnButtonCallback = &CMenus::DefaultButtonCallback);
+	void PopupConfirm(const char *pTitle, const char *pMessage,
+		const char *pConfirmButtonLabel, const char *pCancelButtonLabel,
+		FPopupButtonCallback pfnConfirmButtonCallback = &CMenus::DefaultButtonCallback, int ConfirmNextPopup = POPUP_NONE,
+		FPopupButtonCallback pfnCancelButtonCallback = &CMenus::DefaultButtonCallback, int CancelNextPopup = POPUP_NONE);
 
 	// images
 	struct CMenuImage
@@ -402,14 +419,6 @@ private:
 
 	int64 m_LastInput;
 
-	//
-	char m_aMessageTopic[512];
-	char m_aMessageBody[512];
-	char m_aMessageButton[512];
-	int m_NextPopup;
-
-	void PopupMessage(const char *pTopic, const char *pBody, const char *pButton, int Next=POPUP_NONE);
-
 	// some settings
 	static float ms_ButtonHeight;
 	static float ms_ListheaderHeight;
@@ -461,6 +470,16 @@ private:
 		bool m_InfosLoaded;
 		bool m_Valid;
 		CDemoHeader m_Info;
+
+		int GetMarkerCount() const
+		{
+			if(!m_Valid || !m_InfosLoaded)
+				return -1;
+			return ((m_Info.m_aNumTimelineMarkers[0]<<24)&0xFF000000) |
+				((m_Info.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
+				((m_Info.m_aNumTimelineMarkers[2]<<8)&0xFF00) |
+				(m_Info.m_aNumTimelineMarkers[3]&0xFF);
+		}
 
 		bool operator<(const CDemoItem &Other) const
 		{
@@ -615,13 +634,18 @@ private:
 
 	enum
 	{
-		COL_BROWSER_FLAG=0,
+		COL_BROWSER_FLAG = 0,
 		COL_BROWSER_NAME,
 		COL_BROWSER_GAMETYPE,
 		COL_BROWSER_MAP,
 		COL_BROWSER_PLAYERS,
 		COL_BROWSER_PING,
 		NUM_BROWSER_COLS,
+
+		SIDEBAR_TAB_INFO = 0,
+		SIDEBAR_TAB_FILTER,
+		SIDEBAR_TAB_FRIEND,
+		NUM_SIDEBAR_TABS,
 
 		ADDR_SELECTION_CHANGE = 1,
 		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2,
@@ -664,6 +688,7 @@ private:
 
 
 	// video settings
+	bool m_CheckVideoSettings;
 	enum
 	{
 		MAX_RESOLUTIONS=256,
@@ -695,6 +720,7 @@ private:
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
 	float RenderDemoDetails(CUIRect View);
+	void PopupConfirmDeleteDemo();
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);
@@ -713,6 +739,7 @@ private:
 	void RenderServerbrowserServerList(CUIRect View);
 	void RenderServerbrowserSidebar(CUIRect View);
 	void RenderServerbrowserFriendTab(CUIRect View);
+	void PopupConfirmRemoveFriend();
 	void RenderServerbrowserFilterTab(CUIRect View);
 	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
@@ -722,6 +749,7 @@ private:
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	void RenderFilterHeader(CUIRect View, int FilterIndex);
+	void PopupConfirmRemoveFilter();
 	int DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainConnect(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -745,11 +773,16 @@ private:
 	void RenderSettingsTee(CUIRect MainView);
 	void RenderSettingsTeeBasic(CUIRect MainView);
 	void RenderSettingsTeeCustom(CUIRect MainView);
+	void PopupConfirmDeleteSkin();
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettingsZilly(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
+	void ResetSettingsGeneral();
+	void ResetSettingsControls();
+	void ResetSettingsGraphics();
+	void ResetSettingsSound();
 
 	bool DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 						  const sorted_array<CVideoMode>& lModes);

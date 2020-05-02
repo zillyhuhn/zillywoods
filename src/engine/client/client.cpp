@@ -2443,12 +2443,14 @@ void CClient::Run()
 	GameClient()->OnInit();
 
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
+	str_format(aBuf, sizeof(aBuf), "netversion %s", GameClient()->NetVersion());
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 	if(str_comp(GameClient()->NetVersionHashUsed(), GameClient()->NetVersionHashReal()))
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "WARNING: netversion hash differs");
 	}
+	str_format(aBuf, sizeof(aBuf), "game version %s", GameClient()->Version());
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 
 	//
 	m_FpsGraph.Init(0.0f, 120.0f);
@@ -2914,10 +2916,16 @@ void CClient::ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, 
 		pfnCallback(pResult, pCallbackUserData);
 }
 
-void CClient::ToggleFullscreen()
+bool CClient::ToggleFullscreen()
 {
-	if(Graphics()->Fullscreen(m_pConfig->m_GfxFullscreen^1))
-		m_pConfig->m_GfxFullscreen ^= 1;
+#ifndef CONF_PLATFORM_MACOSX
+	if(Graphics()->Fullscreen(Config()->m_GfxFullscreen^1))
+		Config()->m_GfxFullscreen ^= 1;
+	return true;
+#else
+	Config()->m_GfxFullscreen ^= 1;
+	return false;
+#endif
 }
 
 void CClient::ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

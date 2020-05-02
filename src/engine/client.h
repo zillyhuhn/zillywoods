@@ -106,7 +106,7 @@ public:
 
 	// gfx
 	virtual void SwitchWindowScreen(int Index) = 0;
-	virtual void ToggleFullscreen() = 0;
+	virtual bool ToggleFullscreen() = 0;
 	virtual void ToggleWindowBordered() = 0;
 	virtual void ToggleWindowVSync() = 0;
 
@@ -145,7 +145,7 @@ public:
 	virtual const void *SnapFindItem(int SnapID, int Type, int ID) const = 0;
 	virtual const void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const = 0;
 	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
-	
+
 	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
