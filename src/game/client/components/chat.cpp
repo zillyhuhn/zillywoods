@@ -537,12 +537,113 @@ void CChat::ServerCommandCallback(IConsole::IResult *pResult, void *pContext)
 	pChatData->m_pClient->OnRelease();
 }
 
+// rus
+#include "curl/curl.h"
+#include "curl/easy.h"
+#include <stdlib.h>
+#include <string.h>
+#define TRANSLATE_API_KEY "trnsl.1.1.20200502T165100Z.b552eff88db93b8b.dbbfc2005ed7324bc8fc0903e4fa2256abf71567"
+
+struct bufstring {
+  char *ptr;
+  size_t len;
+};
+
+static void init_string(struct bufstring *s) {
+  s->len = 0;
+  s->ptr = (char *)malloc(s->len+1);
+  if (s->ptr == NULL) {
+    fprintf(stderr, "malloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  s->ptr[0] = '\0';
+}
+
+static size_t writefunc(void *ptr, size_t size, size_t nmemb, struct bufstring *s)
+{
+  size_t new_len = s->len + size*nmemb;
+  s->ptr = (char *)realloc(s->ptr, new_len+1);
+  if (s->ptr == NULL) {
+    fprintf(stderr, "realloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  memcpy(s->ptr+s->len, ptr, size*nmemb);
+  s->ptr[new_len] = '\0';
+  s->len = new_len;
+
+  return size*nmemb;
+}
+
+static void EscapeUrl(char *pBuf, int Size, const char *pStr)
+{
+	char *pEsc = curl_easy_escape(0, pStr, 0);
+	str_copy(pBuf, pEsc, Size);
+	curl_free(pEsc);
+}
+
 void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 {
 	// char aBuf[128];
 	// str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
 	// if (!str_comp(pMsg, "!help"))
 	// 	Say(CHAT_ALL, &aBuf[1]);
+	if(!Config()->m_ClRuski)
+		return;
+
+	char aRequest[2048];
+	char aMsgEscaped[2048];
+	EscapeUrl(aMsgEscaped, sizeof(aMsgEscaped), pMsg);
+	str_format(
+		aRequest,
+		sizeof(aRequest),
+		"https://translate.yandex.net/api/v1.5/tr.json/translate?text=%s&lang=en&key=%s",
+		aMsgEscaped,
+		TRANSLATE_API_KEY
+	);
+	dbg_msg("curl", "%s", aRequest);
+
+	CURL *curl;
+	CURLcode res;
+
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+	curl = curl_easy_init();
+	if(curl) {
+		struct bufstring s;
+		init_string(&s);
+		curl_easy_setopt(curl, CURLOPT_URL, aRequest);
+
+		// twchat is not encrypted to prefer working ssl over secure ssl
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+
+		/* Perform the request, res will get the return code */ 
+		res = curl_easy_perform(curl);
+		/* Check for errors */ 
+		if(res != CURLE_OK)
+		{
+			dbg_msg(
+				"curl",
+				"curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res)
+			);
+		}
+		else
+		{
+			dbg_msg("translate", "%s", s.ptr);
+			Say(CHAT_ALL, s.ptr);
+		}
+		free(s.ptr);
+
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+	}
+
+	curl_global_cleanup();
 }
 
 void CChat::OnMessage(int MsgType, void *pRawMsg)
