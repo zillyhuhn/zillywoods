@@ -134,7 +134,17 @@ public:
 
     int OnCommand(const char *pCommand, const char *pArgs, int ClientID)
     {
-        dbg_msg("chat-command", "calling '%s' with args '%s'", pCommand, pArgs);
+        char aArgs[2048]; // TODO: use arg len enum here
+        str_format(aArgs, sizeof(aArgs), "'%s'", pArgs);
+        if (str_find(pCommand, "register") ||
+            str_find(pCommand, "login") ||
+            str_find(pCommand, "code") ||
+            str_find(pCommand, "save") ||
+            str_find(pCommand, "load") ||
+            str_find(pCommand, "timeout"))
+            str_copy(aArgs, "***", sizeof(aArgs));
+
+        dbg_msg("chat-command", "calling '%s' with args %s", pCommand, aArgs);
         const CCommand *pCom = GetCommand(pCommand);
         if(!pCom)
             return 1;
