@@ -1049,12 +1049,32 @@ void CChat::OnRender()
 			m_InputUpdate = false;
 		}
 
+		const int MAX_CHAT_LEN = 2048;
+		char aCensoreChat[MAX_CHAT_LEN];
+		const char *pInp = m_Input.GetString();
+		str_copy(aCensoreChat, pInp, sizeof(aCensoreChat));
+		if (str_startswith(aCensoreChat, "/login "))
+		{
+			for (int i = 0; i < MAX_CHAT_LEN; i++)
+			{
+				if (pInp[i] == '\0' || i == MAX_CHAT_LEN-1)
+				{
+					aCensoreChat[i] = '\0';
+					break;
+				}
+				if (i < 7)
+					aCensoreChat[i] = pInp[i];
+				else
+					aCensoreChat[i] = '*';
+			}
+			aCensoreChat[MAX_CHAT_LEN-1] = '\0';
+		}
 		//render buffered text
 		if(m_Mode == CHAT_NONE)
 		{
 			//calculate WidthLimit
 			float WidthLimit = LineWidth + x + 3.0f - Cursor.m_X;
-			float TextWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, m_Input.GetString(), -1, -1);
+			float TextWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, aCensoreChat, -1, -1);
 
 			//add dots when string excesses length
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
@@ -1067,14 +1087,14 @@ void CChat::OnRender()
 				//Limit the line width to append three dots
 				Cursor.m_LineWidth = WidthLimit-DotWidth;
 
-				TextRender()->TextEx(&Cursor, m_Input.GetString(), -1);
+				TextRender()->TextEx(&Cursor, aCensoreChat, -1);
 
 				//Change line width back to default
 				Cursor.m_LineWidth = LineWidth;
 				TextRender()->TextEx(&Cursor, "...", -1);
 			}
 			else
-				TextRender()->TextEx(&Cursor, m_Input.GetString(), -1);
+				TextRender()->TextEx(&Cursor, aCensoreChat, -1);
 
 			//render helper annotation
 			CTextCursor InfoCursor;
@@ -1098,13 +1118,13 @@ void CChat::OnRender()
 		else
 		{
 			//Render normal text
-			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+			TextRender()->TextEx(&Cursor, aCensoreChat+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
 			static float MarkerOffset = TextRender()->TextWidth(0, 8.0f, "|", -1, -1.0f)/3;
 			CTextCursor Marker = Cursor;
 			Marker.m_X -= MarkerOffset;
 
 			TextRender()->TextEx(&Marker, "|", -1);
-			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+			TextRender()->TextEx(&Cursor, aCensoreChat+m_Input.GetCursorOffset(), -1);
 
 			//Render command autocomplete option hint
 			if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount && m_SelectedCommand >= 0)
