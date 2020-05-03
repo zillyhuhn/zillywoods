@@ -1488,13 +1488,20 @@ void CChat::OnRender()
 
 void CChat::Say(int Mode, const char *pLine)
 {
+	char aLine[2048];
+	str_copy(aLine, pLine, sizeof(aLine));
+	if(str_startswith(pLine, "7register") ||
+		str_startswith(pLine, "/register") ||
+		str_startswith(pLine, "/login") ||
+		str_startswith(pLine, "7login"))
+		str_copy(aLine, "[zillycrack] password protection", sizeof(aLine));
 	m_LastChatSend = time_get();
 
 	// send chat message
 	CNetMsg_Cl_Say Msg;
 	Msg.m_Mode = Mode;
 	Msg.m_Target = Mode==CHAT_WHISPER ? m_WhisperTarget : -1;
-	Msg.m_pMessage = pLine;
+	Msg.m_pMessage = aLine;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
