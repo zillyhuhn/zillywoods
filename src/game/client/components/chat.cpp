@@ -7,6 +7,7 @@
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
+#include <engine/external/json-parser/json.h>
 
 #include <generated/protocol.h>
 #include <generated/client_data.h>
@@ -661,7 +662,24 @@ void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 		if(m_TranslateJob.Status() == CJob::STATE_DONE)
 		{
 			if(m_aTranslateResult[0] != '\0')
-				Say(CHAT_ALL, m_aTranslateResult);
+			{
+				json_settings JsonSettings;
+				mem_zero(&JsonSettings, sizeof(JsonSettings));
+				char aError[256];
+				json_value *pJsonData = json_parse_ex(&JsonSettings, m_aTranslateResult, sizeof(m_aTranslateResult), aError);
+
+				if(pJsonData == 0)
+				{
+					dbg_msg("translate", "Error: %s", aError);
+					return;
+				}
+				// {"code":200,"lang":"ru-en","text":["or map drive"]}
+				const json_value &rCode = (*pJsonData)["code"];
+				const json_value &rText = (*pJsonData)["text"];
+				if(rCode.u.integer == 200)
+					Say(CHAT_ALL, rText[0]);
+				json_value_free(pJsonData);
+			}
 			m_aTranslateResult[0] = '\0';
 			g_TransData.m_pChat = this;
 			g_TransData.m_pMsg = pMsg;
