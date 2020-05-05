@@ -657,7 +657,7 @@ void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 	// str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
 	// if (!str_comp(pMsg, "!help"))
 	// 	Say(CHAT_ALL, &aBuf[1]);
-	if(Config()->m_ClRuski)
+	if(Config()->m_ClRuski && ClientID > 0)
 	{
 		if(m_TranslateJob.Status() == CJob::STATE_DONE)
 		{
@@ -675,8 +675,9 @@ void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 				}
 				// {"code":200,"lang":"ru-en","text":["or map drive"]}
 				const json_value &rCode = (*pJsonData)["code"];
+				const json_value &rLang = (*pJsonData)["lang"];
 				const json_value &rText = (*pJsonData)["text"];
-				if(rCode.u.integer == 200)
+				if(rCode.u.integer == 200 && !str_comp(rLang, "ru-en"))
 					Say(CHAT_ALL, rText[0]);
 				json_value_free(pJsonData);
 			}
