@@ -23,6 +23,7 @@
 #include "chat.h"
 #include "binds.h"
 
+#define CHAT_TRANSLATE 4
 
 void CChat::OnReset()
 {
@@ -678,7 +679,7 @@ void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 				const json_value &rLang = (*pJsonData)["lang"];
 				const json_value &rText = (*pJsonData)["text"];
 				if(rCode.u.integer == 200 && !str_comp(rLang, "ru-en"))
-					Say(CHAT_ALL, rText[0]);
+					AddLine(rText[0], -1, CHAT_TRANSLATE, -1);
 				json_value_free(pJsonData);
 			}
 			m_aTranslateResult[0] = '\0';
@@ -1392,6 +1393,8 @@ void CChat::OnRender()
 			ShadowColor = ShadowWhisper;
 
 
+		const vec4 ColorTranslate(0.6f, 0.8f, 0.8f, Blend);
+		const vec4 ColorTranslateText(0.4f, 0.9f, 0.8f, Blend);
 		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, Blend);
 		const vec4 ColorWhisper(0.4f, 1.0f, 1.0f, Blend);
 		const vec4 ColorRed(1.0f, 0.5f, 0.5f, Blend);
@@ -1496,7 +1499,9 @@ void CChat::OnRender()
 		}
 
 		// render name
-		if(pLine->m_ClientID < 0)
+		if(pLine->m_Mode == CHAT_TRANSLATE)
+			TextColor = ColorTranslate;
+		else if(pLine->m_ClientID < 0)
 			TextColor = ColorSystem;
 		else if(pLine->m_Mode == CHAT_WHISPER)
 			TextColor = ColorWhisper;
@@ -1511,7 +1516,7 @@ void CChat::OnRender()
 		else
 			TextColor = ColorAllPre;
 
-		if(pLine->m_ClientID >= 0)
+		if(pLine->m_ClientID >= 0 || pLine->m_Mode == CHAT_TRANSLATE)
 		{
 			int NameCID = pLine->m_ClientID;
 			if(pLine->m_Mode == CHAT_WHISPER && pLine->m_ClientID == m_pClient->m_LocalClientID && pLine->m_TargetID >= 0)
@@ -1522,11 +1527,15 @@ void CChat::OnRender()
 			BgIdColor.a = 0.5f*Blend;
 			RenderTools()->DrawClientID(TextRender(), &Cursor, NameCID, BgIdColor, IdTextColor);
 			str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
+			if(pLine->m_Mode == CHAT_TRANSLATE)
+				str_copy(aBuf, "[TRANS] ", sizeof(aBuf));
 			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}
 
 		// render line
-		if(pLine->m_ClientID < 0)
+		if(pLine->m_Mode == CHAT_TRANSLATE)
+			TextColor = ColorTranslateText;
+		else if(pLine->m_ClientID < 0)
 			TextColor = ColorSystem;
 		else if(pLine->m_Mode == CHAT_WHISPER)
 			TextColor = ColorWhisper;
