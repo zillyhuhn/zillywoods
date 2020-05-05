@@ -85,6 +85,8 @@ void CChat::OnReset()
 	m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
 	m_CommandManager.AddCommand("w", "Whisper another player", "r[name]", &Com_Whisper, this);
 	m_CommandManager.AddCommand("whisper", "Whisper another player", "r[name]", &Com_Whisper, this);
+
+	m_aTranslateResult[0] = '\0';
 }
 
 void CChat::OnMapLoad()
@@ -581,18 +583,18 @@ static void EscapeUrl(char *pBuf, int Size, const char *pStr)
 	curl_free(pEsc);
 }
 
-void CChat::OnMessageZilly(int ClientID, const char * pMsg)
+struct CTransData
 {
-	// char aBuf[128];
-	// str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
-	// if (!str_comp(pMsg, "!help"))
-	// 	Say(CHAT_ALL, &aBuf[1]);
-	if(!Config()->m_ClRuski)
-		return;
+	CChat *m_pChat;
+	const char *m_pMsg;
+} g_TransData;
 
+static int TranslateThread(void *pUser)
+{
+	CTransData *pData = static_cast<CTransData *>(pUser);
 	char aRequest[2048];
 	char aMsgEscaped[2048];
-	EscapeUrl(aMsgEscaped, sizeof(aMsgEscaped), pMsg);
+	EscapeUrl(aMsgEscaped, sizeof(aMsgEscaped), pData->m_pMsg);
 	str_format(
 		aRequest,
 		sizeof(aRequest),
@@ -634,7 +636,8 @@ void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 		else
 		{
 			dbg_msg("translate", "%s", s.ptr);
-			Say(CHAT_ALL, s.ptr);
+			// Say(CHAT_ALL, s.ptr);
+			str_copy(pData->m_pChat->m_aTranslateResult, s.ptr, sizeof(pData->m_pChat->m_aTranslateResult));
 		}
 		free(s.ptr);
 
@@ -644,6 +647,27 @@ void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 	}
 
 	curl_global_cleanup();
+	return 0;
+}
+
+void CChat::OnMessageZilly(int ClientID, const char * pMsg)
+{
+	// char aBuf[128];
+	// str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
+	// if (!str_comp(pMsg, "!help"))
+	// 	Say(CHAT_ALL, &aBuf[1]);
+	if(Config()->m_ClRuski)
+	{
+		if(m_TranslateJob.Status() == CJob::STATE_DONE)
+		{
+			if(m_aTranslateResult[0] != '\0')
+				Say(CHAT_ALL, m_aTranslateResult);
+			m_aTranslateResult[0] = '\0';
+			g_TransData.m_pChat = this;
+			g_TransData.m_pMsg = pMsg;
+			m_pClient->Engine()->AddJob(&m_TranslateJob, TranslateThread, &g_TransData);
+		}
+	}
 }
 
 void CChat::OnMessage(int MsgType, void *pRawMsg)

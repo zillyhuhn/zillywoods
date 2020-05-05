@@ -8,6 +8,7 @@
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
 #include <game/commands.h>
+#include <engine/shared/jobs.h>
 
 class CChat : public CComponent
 {
@@ -143,7 +144,10 @@ public:
 	virtual void OnRender();
 	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
-	void OnMessageZilly(int ClientID, const char * pMsg);
 	virtual bool OnInput(IInput::CEvent Event);
+
+	void OnMessageZilly(int ClientID, const char * pMsg);
+	class CJob m_TranslateJob;
+	char m_aTranslateResult[2048];
 };
 #endif
