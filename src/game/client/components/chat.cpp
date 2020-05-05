@@ -1366,6 +1366,9 @@ void CChat::OnRender()
 		if(Now > pLine->m_Time+16*TimeFreq && !m_Show)
 			break;
 
+		if(pLine->m_Mode == CHAT_TRANSLATE && Config()->m_ClRuski != 2)
+			continue;
+
 		y -= pLine->m_Size.y;
 
 		// cut off if msgs waste too much space

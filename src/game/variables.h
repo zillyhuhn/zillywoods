@@ -5,7 +5,7 @@
 #undef GAME_VARIABLES_H // this file will be included several times
 
 // rus
-MACRO_CONFIG_INT(ClRuski, cl_ruski, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show russian keyboard while typing")
+MACRO_CONFIG_INT(ClRuski, cl_ruski, 0, 0, 2, CFGFLAG_CLIENT|CFGFLAG_SAVE, "1=Show russian keyboard while typing 2=translate")
 
 // client
 MACRO_CONFIG_INT(ClPredict, cl_predict, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict client movements")
