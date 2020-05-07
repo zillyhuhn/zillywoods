@@ -604,7 +604,7 @@ static int TranslateThread(void *pUser)
 		aMsgEscaped,
 		TRANSLATE_API_KEY
 	);
-	dbg_msg("curl", "%s", aRequest);
+	// dbg_msg("curl", "%s", aRequest);
 
 	CURL *curl;
 	CURLcode res;
@@ -637,7 +637,7 @@ static int TranslateThread(void *pUser)
 		}
 		else
 		{
-			dbg_msg("translate", "%s", s.ptr);
+			// dbg_msg("translate", "%s", s.ptr);
 			// Say(CHAT_ALL, s.ptr);
 			str_copy(pData->m_pChat->m_aTranslateResult, s.ptr, sizeof(pData->m_pChat->m_aTranslateResult));
 		}
