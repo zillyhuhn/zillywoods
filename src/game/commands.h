@@ -144,7 +144,7 @@ public:
             str_find(pCommand, "timeout"))
             str_copy(aArgs, "***", sizeof(aArgs));
 
-        dbg_msg("chat-command", "calling '%s' with args %s", pCommand, aArgs);
+        dbg_msg("chat_command", "calling '%s' with args '%s'", pCommand, pArgs);
         const CCommand *pCom = GetCommand(pCommand);
         if(!pCom)
             return 1;
