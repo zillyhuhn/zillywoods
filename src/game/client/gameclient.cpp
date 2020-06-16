@@ -597,6 +597,11 @@ void CGameClient::OnReset()
 
 	m_SentTimeoutCode = false;
 
+	// ZillyCrack
+
+	m_ZillyCampX1 = 0;
+	m_ZillyCampX2 = 0;
+
 	// DDRace
 
 	m_Teams.Reset();
@@ -708,6 +713,48 @@ void CGameClient::ZillyWoodsTick()
 		m_pConfig->m_ClDummy = 0;
 }
 
+#include <game/client/animstate.h>
+
+void CGameClient::ZillyCrackRender()
+{
+	if(!m_Snap.m_pLocalCharacter)
+		return;
+
+	// Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	// Graphics()->QuadsBegin();
+	// float Alpha = 1.0f;
+	// Graphics()->SetColor(1.0f*Alpha, 1.0f*Alpha, 1.0f*Alpha, Alpha);
+	// Graphics()->QuadsSetRotation(2.0f);
+	// RenderTools()->SelectSprite(SPRITE_STAR1);
+	// RenderTools()->DrawSprite(m_ZillyCampX1, m_ZillyCampY1, 48.0f);
+	// Graphics()->QuadsEnd();
+
+
+	// float TeeX = m_Snap.m_pLocalCharacter->m_X;
+	// float TeeY = m_Snap.m_pLocalCharacter->m_Y;
+	// float x = m_ZillyCampX1 - TeeX;
+	// float y = m_ZillyCampY1 - TeeY;
+	// CUIRect Rect = {x, y, 20.0f, 20.0f};
+	// RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
+	// RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+
+	// Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	// Graphics()->QuadsBegin();
+	// Graphics()->SetColor(1.0f*Alpha, 1.0f*Alpha, 1.0f*Alpha, Alpha);
+	// Graphics()->QuadsSetRotation(2.0f);
+	// RenderTools()->SelectSprite(SPRITE_STAR1);
+	// RenderTools()->DrawSprite(x, y, 48.0f);
+	// Graphics()->QuadsEnd();
+
+	// CAnimState State;
+	// State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
+	// CTeeRenderInfo RenderInfo = m_aClients[m_LocalClientID].m_RenderInfo;
+	// for(int p = 0; p < NUM_SKINPARTS; p++)
+	// 	RenderInfo.m_aColors[p].a *= 0.5f;
+	// RenderTools()->RenderTee(&State, &RenderInfo, 7, vec2(0,0), vec2(m_ZillyCampX1, m_ZillyCampY1));
+	// RenderTools()->RenderTee(&State, &RenderInfo, 7, vec2(0,0), vec2(15045, 2353));
+}
+
 void CGameClient::OnRender()
 {
 	ZillyWoodsTick();
@@ -719,6 +766,8 @@ void CGameClient::OnRender()
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
+
+	ZillyCrackRender();
 
 	// clear all events/input for this frame
 	Input()->Clear();

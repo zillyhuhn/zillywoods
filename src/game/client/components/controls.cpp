@@ -82,6 +82,69 @@ static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
 	*v &= INPUT_STATE_MASK;
 }
 
+static void ConKeyInputCounterFire(IConsole::IResult *pResult, void *pUserData)
+{
+	CInputState *pState = (CInputState *)pUserData;
+	int *v;
+	if (pState->m_pControls->GameClient()->Config()->m_ClDummy)
+		v = pState->m_pVariable2;
+	else
+		v = pState->m_pVariable1;
+
+	if(((*v)&1) != pResult->GetInteger(0))
+		(*v)++;
+	*v &= INPUT_STATE_MASK;
+	if (pState->m_pControls->GameClient()->Config()->m_ClCampHack &&
+		pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER)
+	{
+		pState->m_pControls->GameClient()->m_ZillyCampClick++;
+		if (pState->m_pControls->GameClient()->m_ZillyCampClick % 2 == 0)
+		{
+			// UNSET IF CLOSE
+			vec2 Current = vec2(pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_X, pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_Y);
+			vec2 CrackPos1 = vec2(pState->m_pControls->GameClient()->m_ZillyCampX1, pState->m_pControls->GameClient()->m_ZillyCampY1);
+			float dist = distance(CrackPos1, Current);
+			if (dist < 100.0f)
+			{
+				pState->m_pControls->GameClient()->m_ZillyCampX1 = 0.0f;
+				pState->m_pControls->GameClient()->m_ZillyCampY1 = 0.0f;
+				pState->m_pControls->GameClient()->m_pChat->AddLine("Unset camp[1]");
+				return;
+			}
+			vec2 CrackPos2 = vec2(pState->m_pControls->GameClient()->m_ZillyCampX2, pState->m_pControls->GameClient()->m_ZillyCampY2);
+			dist = distance(CrackPos2, Current);
+			if (dist < 100.0f)
+			{
+				pState->m_pControls->GameClient()->m_ZillyCampX2 = 0.0f;
+				pState->m_pControls->GameClient()->m_ZillyCampY2 = 0.0f;
+				pState->m_pControls->GameClient()->m_pChat->AddLine("Unset camp[2]");
+				return;
+			}
+			// SET OTHERWISE
+			if (pState->m_pControls->GameClient()->m_ZillyCampClick == 2)
+			{
+				pState->m_pControls->GameClient()->m_ZillyCampX1 = pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_X;
+				pState->m_pControls->GameClient()->m_ZillyCampY1 = pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_Y;
+			}
+			else
+			{
+				pState->m_pControls->GameClient()->m_ZillyCampX2 = pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_X;
+				pState->m_pControls->GameClient()->m_ZillyCampY2 = pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_Y;
+			}
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf),
+				"Set camp[%d] %d",
+				pState->m_pControls->GameClient()->m_ZillyCampClick == 2 ?
+				1 : 2,
+				pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_X / 32
+			);
+			pState->m_pControls->GameClient()->m_pChat->AddLine(aBuf);
+		}
+		if (pState->m_pControls->GameClient()->m_ZillyCampClick > 3)
+			pState->m_pControls->GameClient()->m_ZillyCampClick = 0;
+	}
+}
+
 struct CInputSet
 {
 	CControls *m_pControls;
@@ -116,7 +179,7 @@ void CControls::OnConsoleInit()
 	{ static CInputState s_State = {this, &m_InputDirectionRight[0], &m_InputDirectionRight[1]}; Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyInputState, (void *)&s_State, "Move right"); }
 	{ static CInputState s_State = {this, &m_InputData[0].m_Jump, &m_InputData[1].m_Jump}; Console()->Register("+jump", "", CFGFLAG_CLIENT, ConKeyInputState, (void *)&s_State, "Jump"); }
 	{ static CInputState s_State = {this, &m_InputData[0].m_Hook, &m_InputData[1].m_Hook}; Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, (void *)&s_State, "Hook"); }
-	{ static CInputState s_State = {this, &m_InputData[0].m_Fire, &m_InputData[1].m_Fire}; Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, (void *)&s_State, "Fire"); }
+	{ static CInputState s_State = {this, &m_InputData[0].m_Fire, &m_InputData[1].m_Fire}; Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounterFire, (void *)&s_State, "Fire"); }
 	{ static CInputState s_State = {this, &m_ShowHookColl[0], &m_ShowHookColl[1]}; Console()->Register("+showhookcoll", "", CFGFLAG_CLIENT, ConKeyInputState, (void *)&s_State, "Show Hook Collision"); }
 
 	{ static CInputSet s_Set = {this, &m_InputData[0].m_WantedWeapon, &m_InputData[1].m_WantedWeapon, 1}; Console()->Register("+weapon1", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to hammer"); }
@@ -226,6 +289,7 @@ int CControls::SnapInput(int *pData)
 			m_InputData[m_pClient->Config()->m_ClDummy].m_TargetX = (int)(sinf(t*3)*100.0f);
 			m_InputData[m_pClient->Config()->m_ClDummy].m_TargetY = (int)(cosf(t*3)*100.0f);
 		}
+		ZillyCrackTick();
 
 		if (m_pClient->Config()->m_ClDummy != m_LastDummy)
 		{
@@ -305,5 +369,34 @@ void CControls::ClampMousePos()
 
 		if(length(m_MousePos[m_pClient->Config()->m_ClDummy]) > MouseMax)
 			m_MousePos[m_pClient->Config()->m_ClDummy] = normalize(m_MousePos[m_pClient->Config()->m_ClDummy])*MouseMax;
+	}
+}
+
+void CControls::ZillyCrackTick()
+{
+	CNetObj_PlayerInput * pInp = &m_InputData[m_pClient->Config()->m_ClDummy];
+	if (!m_pClient->Config()->m_ClCampHack)
+		return;
+	if (!m_pClient->m_Snap.m_pLocalCharacter)
+		return;
+
+	float X = m_pClient->m_Snap.m_pLocalCharacter->m_X;
+	float CX1 = m_pClient->m_ZillyCampX1;
+	float CX2 = m_pClient->m_ZillyCampX2;
+	if (CX1 < 0.01f || CX2 < 0.01f)
+		return;
+
+	if (m_pClient->m_Snap.m_pLocalCharacter->m_Weapon != WEAPON_HAMMER)
+	{
+		if (X < CX1)
+		{
+			// dbg_msg("hack", "X1 %.2f < %.2f", X, CX1);
+			pInp->m_Direction = 1;
+		}
+		else if (X > CX2)
+		{
+			// dbg_msg("hack", "X2 %.2f > %.2f", X, CX1);
+			pInp->m_Direction = -1;
+		}
 	}
 }

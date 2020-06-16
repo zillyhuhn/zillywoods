@@ -325,6 +325,16 @@ public:
 
 	void ZillyWoodsTick();
 
+	// ZillyCrack
+
+	int m_ZillyCampX1;
+	int m_ZillyCampY1;
+	int m_ZillyCampX2;
+	int m_ZillyCampY2;
+	// used to track if pos 1 or pos 2 is selected
+	int m_ZillyCampClick;
+	void ZillyCrackRender();
+
 	// DDRace
 
 	int m_LocalIDs[2];

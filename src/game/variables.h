@@ -4,8 +4,9 @@
 #define GAME_VARIABLES_H
 #undef GAME_VARIABLES_H // this file will be included several times
 
-// rus
+// ZillyCrack
 MACRO_CONFIG_INT(ClRuski, cl_ruski, 0, 0, 2, CFGFLAG_CLIENT|CFGFLAG_SAVE, "1=Show russian keyboard while typing 2=translate")
+MACRO_CONFIG_INT(ClCampHack, cl_camp_hack, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "fire to mark camp area")
 
 // client
 MACRO_CONFIG_INT(ClPredict, cl_predict, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Predict client movements")

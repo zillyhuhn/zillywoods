@@ -511,6 +511,27 @@ void CPlayers::RenderPlayer(
 	}
 }
 
+#include <engine/textrender.h>
+
+void CPlayers::ZillyCrackCoords(int x, int y, int ID)
+{
+	char aName[64];
+	str_format(aName, sizeof(aName), "%d", ID);
+
+	float FontSize = 18.f;
+	CTextCursor Cursor;
+	float tw = TextRender()->TextWidth(0, FontSize, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
+	TextRender()->SetCursor(&Cursor, x-tw/2.0f, y-FontSize-38.0f, FontSize, TEXTFLAG_RENDER);
+
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+
+	TextRender()->TextEx(&Cursor, aName, -1);
+
+	TextRender()->TextColor(CUI::ms_DefaultTextColor);
+	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+}
+
 void CPlayers::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
@@ -592,4 +613,24 @@ void CPlayers::OnRender()
 			}
 		}
 	}
+
+	// ZillyCrack
+
+	// dbg_msg("ghsot", "%d %d - %d %d",
+	// 	pPlayerChar->m_X,
+	// 	pPlayerChar->m_Y,
+	// 	m_pClient->m_ZillyCampX1,
+	// 	m_pClient->m_ZillyCampY1
+	// );
+	// RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, vec2(15045, 2353)); // render ghost
+	CAnimState State;
+	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
+	CTeeRenderInfo RenderInfo = m_pClient->m_aClients[m_pClient->m_LocalClientID].m_RenderInfo;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+		RenderInfo.m_aColors[p].a *= 0.2f;
+	RenderTools()->RenderTee(&State, &RenderInfo, 7, vec2(0,0), vec2(m_pClient->m_ZillyCampX1, m_pClient->m_ZillyCampY1));
+	RenderTools()->RenderTee(&State, &RenderInfo, 7, vec2(0,0), vec2(m_pClient->m_ZillyCampX2, m_pClient->m_ZillyCampY2));
+
+	ZillyCrackCoords(m_pClient->m_ZillyCampX1, m_pClient->m_ZillyCampY1, 1);
+	ZillyCrackCoords(m_pClient->m_ZillyCampX2, m_pClient->m_ZillyCampY2, 2);
 }

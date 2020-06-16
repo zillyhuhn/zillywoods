@@ -24,6 +24,10 @@ class CPlayers : public CComponent
 
 public:
 	virtual void OnRender();
+
+	// ZillyCrack
+
+	void ZillyCrackCoords(int x, int y, int ID);
 };
 
 #endif
