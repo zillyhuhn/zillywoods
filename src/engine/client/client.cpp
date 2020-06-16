@@ -153,6 +153,8 @@ void CSmoothTime::Init(int64 Target)
 	m_aAdjustSpeed[0] = 0.3f;
 	m_aAdjustSpeed[1] = 0.3f;
 	m_Graph.Init(0.0f, 0.5f);
+	m_SpikeCounter = 0;
+	m_BadnessScore = -100;
 }
 
 void CSmoothTime::SetAdjustSpeed(int Direction, float Value)
@@ -211,11 +213,13 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		{
 			// ignore this ping spike
 			UpdateTimer = 0;
-			pGraph->Add(TimeLeft, 1,1,0);
+			pGraph->Add(TimeLeft, 1,1,0.3f); // yellow
+			m_BadnessScore += 10;
 		}
 		else
 		{
-			pGraph->Add(TimeLeft, 1,0,0);
+			pGraph->Add(TimeLeft, 1,0.3f,0.3f); // red
+			m_BadnessScore += 50;
 			if(m_aAdjustSpeed[AdjustDirection] < 30.0f)
 				m_aAdjustSpeed[AdjustDirection] *= 2.0f;
 		}
@@ -225,7 +229,7 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		if(m_SpikeCounter)
 			m_SpikeCounter--;
 
-		pGraph->Add(TimeLeft, 0,1,0);
+		pGraph->Add(TimeLeft, 0.3f,1,0.3f); // green
 
 		m_aAdjustSpeed[AdjustDirection] *= 0.95f;
 		if(m_aAdjustSpeed[AdjustDirection] < 2.0f)
@@ -234,6 +238,8 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 
 	if(UpdateTimer)
 		UpdateInt(Target);
+
+	m_BadnessScore -= 1+m_BadnessScore/100;
 }
 
 CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
@@ -406,6 +412,11 @@ bool CClient::ConnectionProblems() const
 	return m_NetClient[m_pConfig->m_ClDummy].GotProblems() != 0;
 }
 
+int CClient::GetInputtimeMarginStabilityScore()
+{
+	return m_PredictedTime.GetStabilityScore();
+}
+
 void CClient::SendInput()
 {
 	int64 Now = time_get();
@@ -534,6 +545,12 @@ void CClient::EnterGame()
 {
 	if(State() == IClient::STATE_DEMOPLAYBACK)
 		return;
+
+	if(State() == IClient::STATE_ONLINE)
+	{
+		// Don't reset everything while already in game.
+		return;
+	}
 
 	// now we will wait for two snapshots
 	// to finish the connection
