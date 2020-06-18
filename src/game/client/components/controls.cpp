@@ -95,6 +95,7 @@ static void ConKeyInputCounterFire(IConsole::IResult *pResult, void *pUserData)
 		(*v)++;
 	*v &= INPUT_STATE_MASK;
 	if (pState->m_pControls->GameClient()->Config()->m_ClCampHack &&
+		pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter &&
 		pState->m_pControls->GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER)
 	{
 		pState->m_pControls->GameClient()->m_ZillyCampClick++;
