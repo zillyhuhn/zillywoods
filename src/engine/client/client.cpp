@@ -977,7 +977,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 		char aWantedSha256[SHA256_MAXSTRSIZE];
 		sha256_str(m_pMap->Sha256(), aSha256, sizeof(aSha256));
 		sha256_str(*pWantedSha256, aWantedSha256, sizeof(aWantedSha256));
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %s != %s", aSha256, aWantedSha256);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. found = %s wanted = %s", aSha256, aWantedSha256);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
 		m_pMap->Unload();
 		return aErrorMsg;
@@ -986,7 +986,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 	// get the crc of the map
 	if(m_pMap->Crc() != WantedCrc)
 	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %08x != %08x", m_pMap->Crc(), WantedCrc);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. found = %08x wanted = %08x", m_pMap->Crc(), WantedCrc);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
 		m_pMap->Unload();
 		return aErrorMsg;
@@ -3037,8 +3037,6 @@ void CClient::ConnectOnStart(const char *pAddress)
 
 void CClient::DoVersionSpecificActions()
 {
-	if(m_pConfig->m_ClLastVersionPlayed <= 0x0703)
-		str_copy(m_pConfig->m_ClMenuMap, "winter", sizeof(m_pConfig->m_ClMenuMap));
 	m_pConfig->m_ClLastVersionPlayed = CLIENT_VERSION;
 }
 
