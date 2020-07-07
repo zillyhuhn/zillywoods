@@ -606,7 +606,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			if(Num < 10)
 				Button.x += RenderOffset;
 			if(!Num)
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_LEFT);
 			Button.x += TextRender()->TextWidth(0, 12.0f, aTemp, -1, -1.0f);
 		}
@@ -1913,7 +1913,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	static char s_aGametype[16] = { 0 };
 	static float s_OffsetGametype = 0.0f;
 	Button.VSplitRight(Button.h, &Label, &Button);
-	DoEditBox(&s_OffsetGametype, &Label, s_aGametype, sizeof(s_aGametype), FontSize, &s_OffsetGametype);
+	DoEditBox(&s_OffsetGametype, &Label, s_aGametype, sizeof(s_aGametype), FontSize, &s_OffsetGametype, false, CUI::CORNER_L);
 	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
 	DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Button);
 	static CButtonContainer s_AddGametype;
