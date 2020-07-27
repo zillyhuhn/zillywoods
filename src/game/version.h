@@ -10,6 +10,7 @@
 #define PREV_CLIENT_VERSION 0x0704
 #define SETTINGS_FILENAME "settings_zilly"
 #define ZILLYWOODS_VERSION "0008"
+#define ZILLY_STRING "zilly!" ZILLYWOODS_VERSION
 #define DDRACE_VERSION 1
 static const char GAME_RELEASE_VERSION[8] = "0.7.5";
 #endif
