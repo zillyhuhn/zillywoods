@@ -2239,7 +2239,11 @@ bool CGameClient::IsRaceGametype()
 {
 	CServerInfo Info;
 	Client()->GetServerInfo(&Info);
-	if(str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap"))
+	if(
+		str_find_nocase(Info.m_aGameType, "race") ||
+		str_find_nocase(Info.m_aGameType, "blMod") ||
+		str_find_nocase(Info.m_aGameType, "fastcap")
+		)
 		return true;
 	return false;
 }
