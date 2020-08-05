@@ -246,8 +246,8 @@ public:
 	void OnClientOnline();
 
 	virtual void Connect(const char *pAddress);
-	void DisconnectWithReason(const char *pReason);
-	virtual void Disconnect();
+	void DisconnectWithReason(const char *pReason, bool IsFake = false);
+	virtual void Disconnect(bool IsFake = false);
 	const char *ServerAddress() const { return m_aServerAddressStr; }
 
 	virtual void DummyDisconnect(const char *pReason);
@@ -324,6 +324,7 @@ public:
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
 	static void Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData);
+	static void Con_LoadMap(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainWindowBordered(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

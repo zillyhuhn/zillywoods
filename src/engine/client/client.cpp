@@ -613,7 +613,7 @@ void CClient::Connect(const char *pAddress)
 	m_GametimeMarginGraph.Init(-150.0f, 150.0f);
 }
 
-void CClient::DisconnectWithReason(const char *pReason)
+void CClient::DisconnectWithReason(const char *pReason, bool IsFake)
 {
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "disconnecting. reason='%s'", pReason?pReason:"unknown");
@@ -635,7 +635,8 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_RconAuthed[0] = 0;
 	m_UseTempRconCommands = 0;
 	m_pConsole->DeregisterTempAll();
-	m_NetClient[0].Disconnect(pReason);
+	if(!IsFake)
+		m_NetClient[0].Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
 	m_pMap->Unload();
 
@@ -665,11 +666,11 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_ReceivedSnapshots[m_pConfig->m_ClDummy] = 0;
 }
 
-void CClient::Disconnect()
+void CClient::Disconnect(bool IsFake)
 {
 	if(m_DummyConnected)
 		DummyDisconnect(0);
-	DisconnectWithReason(0);
+	DisconnectWithReason(0, IsFake);
 }
 
 bool CClient::DummyConnected()
@@ -2893,6 +2894,28 @@ void CClient::Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoRecorder_AddDemoMarker();
 }
 
+void CClient::Con_LoadMap(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->m_State = IClient::STATE_OFFLINE;
+	char aCurrentMap[IO_MAX_PATH_LENGTH];
+	str_copy(aCurrentMap, pSelf->GetCurrentMapPath(), sizeof(aCurrentMap));
+	pSelf->Disconnect(true);
+	if(!pSelf->m_pMap->Load(pResult->GetString(0)))
+	{
+		char aErrorMsg[128];
+		str_format(aErrorMsg, sizeof(aErrorMsg), "map '%s' not found", pResult->GetString(0));
+		pSelf->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aErrorMsg);
+		if(!pSelf->m_pMap->Load(aCurrentMap))
+		{
+			str_format(aErrorMsg, sizeof(aErrorMsg), "map '%s' not found", aCurrentMap);
+			pSelf->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aErrorMsg);
+		}
+	}
+	pSelf->m_pGameClient->OnConnected();
+	pSelf->m_State = IClient::STATE_ONLINE;
+}
+
 void CClient::ServerBrowserUpdate()
 {
 	m_ResortServerBrowser = true;
@@ -3013,6 +3036,9 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("record", "?s[file]", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 	m_pConsole->Register("add_demomarker", "", CFGFLAG_CLIENT, Con_AddDemoMarker, this, "Add demo timeline marker");
+
+	// zillycrack
+	m_pConsole->Register("load_map", "s[file]", CFGFLAG_CLIENT, Con_LoadMap, this, "Load mapfile");
 
 	// used for server browser update
 	m_pConsole->Chain("br_filter_string", ConchainServerBrowserUpdate, this);
