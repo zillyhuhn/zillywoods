@@ -61,18 +61,20 @@
 #undef main
 #endif
 
-void CGraph::Init(float Min, float Max)
+void CGraph::Init(float Min, float Max, int Scale)
 {
+	m_Scale = Scale;
 	m_MinRange = m_Min = Min;
 	m_MaxRange = m_Max = Max;
 	m_Index = 0;
 }
 
-void CGraph::Scale()
+void CGraph::Scale(int Scale)
 {
+	m_Scale = Scale;
 	m_Min = m_MinRange;
 	m_Max = m_MaxRange;
-	for(int i = 0; i < MAX_VALUES; i++)
+	for(int i = 0; i < m_Scale; i++)
 	{
 		if(m_aValues[i] > m_Max)
 			m_Max = m_aValues[i];
@@ -83,7 +85,7 @@ void CGraph::Scale()
 
 void CGraph::Add(float v, float r, float g, float b)
 {
-	m_Index = (m_Index+1)%MAX_VALUES;
+	m_Index = (m_Index+1)%m_Scale;
 	m_aValues[m_Index] = v;
 	m_aColors[m_Index][0] = r;
 	m_aColors[m_Index][1] = g;
@@ -111,12 +113,12 @@ void CGraph::Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture,
 		IGraphics::CLineItem(x, y+(h*3)/4, x+w, y+(h*3)/4),
 		IGraphics::CLineItem(x, y+h/4, x+w, y+h/4)};
 	pGraphics->LinesDraw(aLineItems, 2);
-	for(int i = 1; i < MAX_VALUES; i++)
+	for(int i = 1; i < m_Scale; i++)
 	{
-		float a0 = (i-1)/(float)MAX_VALUES;
-		float a1 = i/(float)MAX_VALUES;
-		int i0 = (m_Index+i-1)%MAX_VALUES;
-		int i1 = (m_Index+i)%MAX_VALUES;
+		float a0 = (i-1)/(float)m_Scale;
+		float a1 = i/(float)m_Scale;
+		int i0 = (m_Index+i-1)%m_Scale;
+		int i1 = (m_Index+i)%m_Scale;
 
 		float v0 = (m_aValues[i0]-m_Min) / (m_Max-m_Min);
 		float v1 = (m_aValues[i1]-m_Min) / (m_Max-m_Min);
@@ -907,17 +909,34 @@ void CClient::DebugRender()
 	// render graphs
 	if(m_pConfig->m_DbgGraphs)
 	{
-		float w = Graphics()->ScreenWidth()/4.0f;
-		float h = Graphics()->ScreenHeight()/6.0f;
-		float sp = Graphics()->ScreenWidth()/100.0f;
-		float x = Graphics()->ScreenWidth()-w-sp;
+		if(m_pConfig->m_DbgScale == 0)
+		{
+			float w = Graphics()->ScreenWidth()/4.0f;
+			float h = Graphics()->ScreenHeight()/6.0f;
+			float sp = Graphics()->ScreenWidth()/100.0f;
+			float x = Graphics()->ScreenWidth()-w-sp;
 
-		m_FpsGraph.Scale();
-		m_FpsGraph.Render(Graphics(), s_Font, x, sp*5, w, h, "FPS");
-		m_InputtimeMarginGraph.Scale();
-		m_InputtimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp, w, h, "Prediction Margin");
-		m_GametimeMarginGraph.Scale();
-		m_GametimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
+			m_FpsGraph.Scale();
+			m_FpsGraph.Render(Graphics(), s_Font, x, sp*5, w, h, "FPS");
+			m_InputtimeMarginGraph.Scale();
+			m_InputtimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp, w, h, "Prediction Margin");
+			m_GametimeMarginGraph.Scale();
+			m_GametimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
+		}
+		else
+		{
+			float w = Graphics()->ScreenWidth();
+			float h = Graphics()->ScreenHeight()/6.0f;
+			float sp = Graphics()->ScreenWidth()/100.0f;
+			float x = Graphics()->ScreenWidth()-w-sp;
+
+			m_FpsGraph.Scale(512);
+			m_FpsGraph.Render(Graphics(), s_Font, x, sp*5, w, h, "FPS");
+			m_InputtimeMarginGraph.Scale(512);
+			m_InputtimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp, w, h, "Prediction Margin");
+			m_GametimeMarginGraph.Scale(512);
+			m_GametimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
+		}
 	}
 }
 
@@ -2547,6 +2566,9 @@ void CClient::Run()
 
 		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_G, true))
 			m_pConfig->m_DbgGraphs ^= 1;
+
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_F, true))
+			m_pConfig->m_DbgScale ^= 1;
 
 		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_E, true))
 		{

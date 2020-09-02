@@ -10,6 +10,7 @@
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
 #include <game/client/render.h>
+#include <game/client/components/sounds.h>
 
 #include "menus.h"
 #include "controls.h"
@@ -161,6 +162,8 @@ void CHud::RenderNetworkIssueNotification()
 		IGraphics::CQuadItem QuadItem(x+Margin, 4, FontSize, FontSize);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
+		if(m_pClient->Config()->m_DbgScale)
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
 	}
 }
 

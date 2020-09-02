@@ -10,9 +10,11 @@ class CGraph
 {
 	enum
 	{
-		MAX_VALUES=128,
+		MAX_VALUES=512,
+		DEFAULT_VALUES=128,
 	};
 
+	int m_Scale;
 	float m_Min, m_Max;
 	float m_MinRange, m_MaxRange;
 	float m_aValues[MAX_VALUES];
@@ -20,9 +22,9 @@ class CGraph
 	int m_Index;
 
 public:
-	void Init(float Min, float Max);
+	void Init(float Min, float Max, int Scale = DEFAULT_VALUES);
 
-	void Scale();
+	void Scale(int Scale = DEFAULT_VALUES);
 	void Add(float v, float r, float g, float b);
 	void Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription);
 };
