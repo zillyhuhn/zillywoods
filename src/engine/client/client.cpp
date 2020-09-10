@@ -771,6 +771,11 @@ void CClient::GetServerInfo(CServerInfo *pServerInfo)
 	m_ServerBrowser.UpdateFavoriteState(pServerInfo);
 }
 
+void CClient::SetServerInfo(CServerInfo *pServerInfo)
+{
+	mem_copy(&m_CurrentServerInfo, pServerInfo, sizeof(m_CurrentServerInfo));
+}
+
 // ---
 
 const void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
@@ -2920,6 +2925,8 @@ void CClient::Con_LoadMap(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->m_State = IClient::STATE_OFFLINE;
+	CServerInfo Info;
+	pSelf->GetServerInfo(&Info);
 	char aCurrentMap[IO_MAX_PATH_LENGTH];
 	str_copy(aCurrentMap, pSelf->GetCurrentMapPath(), sizeof(aCurrentMap));
 	pSelf->Disconnect(true);
@@ -2935,6 +2942,7 @@ void CClient::Con_LoadMap(IConsole::IResult *pResult, void *pUserData)
 		}
 	}
 	pSelf->m_pGameClient->OnConnected();
+	pSelf->SetServerInfo(&Info);
 	pSelf->m_State = IClient::STATE_ONLINE;
 }
 

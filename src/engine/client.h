@@ -134,6 +134,7 @@ public:
 
 	// server info
 	virtual void GetServerInfo(class CServerInfo *pServerInfo) = 0;
+	virtual void SetServerInfo(class CServerInfo *pServerInfo) = 0;
 
 	// snapshot interface
 

@@ -261,6 +261,7 @@ public:
 	int SendMsgExY(CMsgPacker *pMsg, int Flags, int NetClient=1);
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo);
+	virtual void SetServerInfo(CServerInfo *pServerInfo);
 
 	// ---
 
