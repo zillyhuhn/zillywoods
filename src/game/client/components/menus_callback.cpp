@@ -67,7 +67,7 @@ static CKeyInfo gs_aKeys[] =
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
 
-void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing)
+void CMenus::DoSettingsControlsButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing)
 {
 	for (int i = Start; i < Stop; i++)
 	{
@@ -249,7 +249,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(0, 5, View, ButtonHeight, Spacing);
+	DoSettingsControlsButtons(0, 5, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }
@@ -266,7 +266,7 @@ float CMenus::RenderSettingsControlsWeapon(CUIRect View)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(5, 12, View, ButtonHeight, Spacing);
+	DoSettingsControlsButtons(5, 12, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }
@@ -283,7 +283,7 @@ float CMenus::RenderSettingsControlsVoting(CUIRect View)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(12, 14, View, ButtonHeight, Spacing);
+	DoSettingsControlsButtons(12, 14, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }
@@ -300,7 +300,7 @@ float CMenus::RenderSettingsControlsChat(CUIRect View)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(14, 18, View, ButtonHeight, Spacing);
+	DoSettingsControlsButtons(14, 18, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }
@@ -341,7 +341,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
+	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
 
 	View.HSplitTop(ButtonHeight*2+Spacing*3, 0, &View);
 	View.VSplitLeft(View.w/3, 0, &View);
@@ -366,7 +366,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View)
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
+	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }
@@ -446,13 +446,13 @@ float CMenus::RenderSettingsControlsZilly(CUIRect View)
 	int NumOptions = 1;
 	int StartOption = 32;
 	float ButtonHeight = 20.0f;
-	float Spaceing = 2.0f;
-	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing;
+	float Spacing = 2.0f;
+	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
-	UiDoGetButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spaceing);
+	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }
