@@ -219,7 +219,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				for(int i = 0; i < pInfo->m_NumTimelineMarkers; i++)
 				{
 					const int MarkerTick = pInfo->m_aTimelineMarkers[i]-pInfo->m_FirstTick;
-					if(abs(MarkerTick-CurrentTick) < Threshold)
+					if(absolute(MarkerTick-CurrentTick) < Threshold)
 					{
 						if(i+1 < pInfo->m_NumTimelineMarkers)
 							DesiredTick = pInfo->m_aTimelineMarkers[i+1]-pInfo->m_FirstTick;
@@ -238,7 +238,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				for(int i = pInfo->m_NumTimelineMarkers-1; i >= 0; i--)
 				{
 					const int MarkerTick = pInfo->m_aTimelineMarkers[i]-pInfo->m_FirstTick;
-					if(abs(MarkerTick-CurrentTick) < Threshold)
+					if(absolute(MarkerTick-CurrentTick) < Threshold)
 					{
 						if(i > 0)
 							DesiredTick = pInfo->m_aTimelineMarkers[i-1]-pInfo->m_FirstTick;
@@ -570,7 +570,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			for(int c = 0; c < NumCols; c++)
 			{
 				CUIRect Button;
-				Button.x = ms_aDemoCols[c].m_Rect.x + FileIcon.w + 10.0f;
+				Button.x = ms_aDemoCols[c].m_Rect.x;
 				Button.y = FileIcon.y;
 				Button.h = ms_aDemoCols[c].m_Rect.h;
 				Button.w = ms_aDemoCols[c].m_Rect.w;
@@ -584,6 +584,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				}
 				if(ID == COL_DEMO_NAME)
 				{
+					Button.x += FileIcon.w + 10.0f;
 					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 				}
 				else if(ID == COL_DEMO_LENGTH && !r.front().m_IsDir && r.front().m_InfosLoaded)

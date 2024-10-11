@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/demo.h>
+#include <engine/shared/config.h>
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
@@ -39,7 +40,12 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	if(!m_pClient->IsWorldPaused())
 		s_LastGameTickTime = Client()->GameTickTime();
-	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
+	
+	float Ct;
+	if(m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
+		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_StartTick) + Client()->PredIntraGameTick())/(float)SERVER_TICK_SPEED;
+	else
+		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
 		return; // projectile haven't been shot yet
 
@@ -189,39 +195,15 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			(pCurrent->m_Team == TEAM_BLUE && pPrevGameDataFlag->m_FlagCarrierBlue != pCurGameDataFlag->m_FlagCarrierBlue)))
 			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
-		// use predicted carrier position if possible
-		if(pCurrent->m_Team == TEAM_RED)
-		{
-			if(pCurGameDataFlag->m_FlagCarrierRed >= 0)
-			{
-				// `FlagCarrier >= 0` means that there is a character carrying the flag
-				if(m_pClient->ShouldUsePredicted() &&
-					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierRed))
-				{
-					Pos = m_pClient->PredictedCharPos(pCurGameDataFlag->m_FlagCarrierRed);
-				}
-				else
-				{
-					Pos = m_pClient->UnpredictedCharPos(pCurGameDataFlag->m_FlagCarrierRed);
-				}
-			}
-		}
-		else if(pCurrent->m_Team == TEAM_BLUE)
-		{
-			if(pCurGameDataFlag->m_FlagCarrierBlue >= 0)
-			{
-				// `FlagCarrier >= 0` means that there is a character carrying the flag
-				if(m_pClient->ShouldUsePredicted() &&
-					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierBlue))
-				{
-					Pos = m_pClient->PredictedCharPos(pCurGameDataFlag->m_FlagCarrierBlue);
-				}
-				else
-				{
-					Pos = m_pClient->UnpredictedCharPos(pCurGameDataFlag->m_FlagCarrierBlue);
-				}
-			}
-		}
+		int FlagCarrier = -1;
+		if(pCurrent->m_Team == TEAM_RED && pCurGameDataFlag->m_FlagCarrierRed >= 0)
+			FlagCarrier = pCurGameDataFlag->m_FlagCarrierRed;
+		else if(pCurrent->m_Team == TEAM_BLUE && pCurGameDataFlag->m_FlagCarrierBlue >= 0)
+			FlagCarrier = pCurGameDataFlag->m_FlagCarrierBlue;
+
+		// make sure to use predicted position
+		if(FlagCarrier >= 0 && FlagCarrier < MAX_CLIENTS && m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(FlagCarrier))
+			Pos = m_pClient->GetCharPos(FlagCarrier, true);
 	}
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
