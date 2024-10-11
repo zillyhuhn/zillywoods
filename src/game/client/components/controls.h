@@ -34,5 +34,6 @@ public:
 	void ResetInput(int Dummy);
 
 	class CGameClient *GameClient() const { return m_pClient; }
+	float GetMaxMouseDistance() const;
 };
 #endif
