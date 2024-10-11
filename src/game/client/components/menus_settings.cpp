@@ -27,8 +27,6 @@
 #include "countryflags.h"
 #include "menus.h"
 
-CMenusKeyBinder CMenus::m_Binder;
-
 CMenusKeyBinder::CMenusKeyBinder()
 {
 	m_TakeKey = false;
@@ -404,7 +402,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 			mem_copy(Config()->m_DummySkin, m_pSelectedSkin->m_aName, sizeof(Config()->m_DummySkin));
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			mem_copy(CSkins::ms_apSkinVariables[Config()->m_ClDummy][p], m_pSelectedSkin->m_apParts[p]->m_aName, 24);
+			mem_copy(CSkins::ms_apSkinVariables[Config()->m_ClDummy][p], m_pSelectedSkin->m_apParts[p]->m_aName, MAX_SKIN_LENGTH);
 			*CSkins::ms_apUCCVariables[Config()->m_ClDummy][p] = m_pSelectedSkin->m_aUseCustomColors[p];
 			*CSkins::ms_apColorVariables[Config()->m_ClDummy][p] = m_pSelectedSkin->m_aPartColors[p];
 		}
@@ -490,11 +488,8 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
-		mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
-		if(Config()->m_ClDummy)
-				Config()->m_DummySkin[0] = 0;
-			else
-				Config()->m_PlayerSkin[0] = 0;
+		mem_copy(CSkins::ms_apSkinVariables[Config()->m_ClDummy][m_TeePartSelected], s->m_aName, MAX_SKIN_LENGTH);
+		Config()->m_PlayerSkin[0] = 0;
 		m_SkinModified = true;
 	}
 	OldSelected = NewSelected;
@@ -1207,13 +1202,13 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		CTeeRenderInfo OwnSkinInfo;
 		OwnSkinInfo.m_Size = 50.0f;
 
-		char aSkinParts[NUM_SKINPARTS][24];
+		char aSkinParts[NUM_SKINPARTS][MAX_SKIN_LENGTH];
 		char* apSkinPartsPtr[NUM_SKINPARTS];
 		int aUCCVars[NUM_SKINPARTS];
 		int aColorVars[NUM_SKINPARTS];
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[Config()->m_ClDummy][p], 24);
+			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[Config()->m_ClDummy][p], MAX_SKIN_LENGTH);
 			apSkinPartsPtr[p] = aSkinParts[p];
 			aUCCVars[p] = *CSkins::ms_apUCCVariables[Config()->m_ClDummy][p];
 			aColorVars[p] = *CSkins::ms_apColorVariables[Config()->m_ClDummy][p];
@@ -1265,7 +1260,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[Config()->m_ClDummy][p], 24);
+			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[Config()->m_ClDummy][p], MAX_SKIN_LENGTH);
 			apSkinPartsPtr[p] = aSkinParts[p];
 			aUCCVars[p] = *CSkins::ms_apUCCVariables[Config()->m_ClDummy][p];
 			aColorVars[p] = *CSkins::ms_apColorVariables[Config()->m_ClDummy][p];
@@ -1524,53 +1519,54 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 float CMenus::RenderSettingsControlsStats(CUIRect View)
 {
+	const float RowHeight = 20.0f;
 	CUIRect Button;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos, Localize("Frags"), Config()->m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FRAGS;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+1, Localize("Deaths"), Config()->m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_DEATHS;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+2, Localize("Suicides"), Config()->m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_SUICIDES;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+3, Localize("Ratio"), Config()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_RATIO;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+4, Localize("Net score"), Config()->m_ClStatboardInfos & TC_STATS_NET, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_NET;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FPM;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+6, Localize("Current spree"), Config()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_SPREE;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+7, Localize("Best spree"), Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+9, Localize("Weapons stats"), Config()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_WEAPS;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+8, Localize("Flag grabs"), Config()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
 
-	View.HSplitTop(20.0f, &Button, &View);
+	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+10, Localize("Flag captures"), Config()->m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
 
-	return 11*20.0f;
+	return 11 * RowHeight;
 }
 
 bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
