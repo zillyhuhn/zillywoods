@@ -512,15 +512,16 @@ void CRenderTools::RenderTeleOverlay(CTeleTile *pTele, int w, int h, float Scale
 
 			int c = mx + my*w;
 
-			unsigned char Index = pTele[c].m_Number;
-			if(Index && pTele[c].m_Type != TILE_TELECHECKIN && pTele[c].m_Type != TILE_TELECHECKINEVIL)
-			{
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%d", Index);
-				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-				UI()->TextRender()->Text(0, mx*Scale - 3.f, my*Scale, Scale - 5.f, aBuf, -1);
-				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-			}
+			// TODO: zillywoods
+			// unsigned char Index = pTele[c].m_Number;
+			// if(Index && pTele[c].m_Type != TILE_TELECHECKIN && pTele[c].m_Type != TILE_TELECHECKINEVIL)
+			// {
+			// 	char aBuf[16];
+			// 	str_format(aBuf, sizeof(aBuf), "%d", Index);
+			// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+			// 	UI()->TextRender()->Text(0, mx*Scale - 3.f, my*Scale, Scale - 5.f, aBuf, -1);
+			// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			// }
 		}
 
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
@@ -571,22 +572,23 @@ void CRenderTools::RenderSpeedupOverlay(CSpeedupTile *pSpeedup, int w, int h, fl
 
 				Graphics()->QuadsEnd();
 
-				if(m_pConfig->m_ClTextEntities)
-				{
-					// draw force
-					char aBuf[16];
-					str_format(aBuf, sizeof(aBuf), "%d", Force);
-					UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-					UI()->TextRender()->Text(0, mx*Scale, (my*Scale) + 16.f + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
-					UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-					if(MaxSpeed)
-					{
-						str_format(aBuf, sizeof(aBuf), "%d", MaxSpeed);
-						UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-						UI()->TextRender()->Text(0, mx*Scale, (my*Scale) + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
-						UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-					}
-				}
+				// TODO: zillywoods
+				// if(m_pConfig->m_ClTextEntities)
+				// {
+				// 	// draw force
+				// 	char aBuf[16];
+				// 	str_format(aBuf, sizeof(aBuf), "%d", Force);
+				// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+				// 	UI()->TextRender()->Text(0, mx*Scale, (my*Scale) + 16.f + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
+				// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				// 	if(MaxSpeed)
+				// 	{
+				// 		str_format(aBuf, sizeof(aBuf), "%d", MaxSpeed);
+				// 		UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+				// 		UI()->TextRender()->Text(0, mx*Scale, (my*Scale) + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
+				// 		UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				// 	}
+				// }
 			}
 		}
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
@@ -626,25 +628,26 @@ void CRenderTools::RenderSwitchOverlay(CSwitchTile *pSwitch, int w, int h, float
 
 			int c = mx + my*w;
 
-			unsigned char Index = pSwitch[c].m_Number;
-			if(Index)
-			{
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%d", Index);
-				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-				UI()->TextRender()->Text(0, mx*Scale, my*Scale + 16.f + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
-				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-			}
+			// TODO: zillywoods
+			// unsigned char Index = pSwitch[c].m_Number;
+			// if(Index)
+			// {
+			// 	char aBuf[16];
+			// 	str_format(aBuf, sizeof(aBuf), "%d", Index);
+			// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+			// 	UI()->TextRender()->Text(0, mx*Scale, my*Scale + 16.f + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
+			// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			// }
 
-			unsigned char Delay = pSwitch[c].m_Delay;
-			if(Delay)
-			{
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%d", Delay);
-				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-				UI()->TextRender()->Text(0, mx*Scale, my*Scale + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
-				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-			}
+			// unsigned char Delay = pSwitch[c].m_Delay;
+			// if(Delay)
+			// {
+			// 	char aBuf[16];
+			// 	str_format(aBuf, sizeof(aBuf), "%d", Delay);
+			// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+			// 	UI()->TextRender()->Text(0, mx*Scale, my*Scale + ((16.f - (Scale - 20.f)) / 2.f), Scale - 20.f, aBuf, -1);
+			// 	UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			// }
 		}
 
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
@@ -690,7 +693,13 @@ void CRenderTools::RenderTuneOverlay(CTuneTile *pTune, int w, int h, float Scale
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d", Index);
 				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-				UI()->TextRender()->Text(0, mx*Scale+11.f, my*Scale+6.f, Scale/1.5f-5.f, aBuf, -1); // numbers shouldn't be too big and in the center of the tile
+				static CTextCursor s_Cursor;
+				s_Cursor.Reset();
+				s_Cursor.MoveTo(mx*Scale+11.f, my*Scale+6.f);
+				s_Cursor.m_FontSize = Scale/1.5f-5.f;
+				s_Cursor.m_MaxLines = -1;
+				s_Cursor.m_Align = TEXTALIGN_RIGHT;
+				UI()->TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
 				UI()->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}

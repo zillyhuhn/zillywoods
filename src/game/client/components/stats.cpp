@@ -179,6 +179,8 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 	float x = OffsetX+(Width/2-w/2);
 	float y = 200.0f;
 
+	static CTextCursor s_Cursor;
+
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	Graphics()->BlendNormal();
@@ -195,8 +197,14 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 	float tw;
 	int px = IsSplit ? 200 : 325;
 
-	TextRender()->Text(0, x+10, y-5, 20.0f, Localize("Name"), -1.0f);
+	s_Cursor.m_FontSize = 20.0f;
+	s_Cursor.m_MaxWidth = -1;
+	s_Cursor.m_Align = TEXTALIGN_LEFT;
+	s_Cursor.Reset();
+	s_Cursor.MoveTo(x+10, y-5);
+	TextRender()->TextOutlined(&s_Cursor, Localize("Name"), -1);
 	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
+	s_Cursor.m_Align = TEXTALIGN_RIGHT;
 	for(i=0; i<9; i++)
 		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
@@ -220,8 +228,11 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 				px += 40.0f; // some extra for the merge
 			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
 				continue;
-			tw = TextRender()->TextWidth(0, 20.0f, pText, -1, -1.0f);
-			TextRender()->Text(0, x+px-tw, y-5, 20.0f, pText, -1.0f);
+			
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y-5);
+
+			TextRender()->TextOutlined(&s_Cursor, pText, -1);
 			px += 100;
 		}
 
@@ -286,6 +297,7 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 	for(int j=0; j<NumPlayers; j++)
 	{
 		if (rendered++ < 0) continue;
+
 		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
 		const bool HighlightedLine = apPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
@@ -302,13 +314,15 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &Teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+28, y+28+TeeOffset));
 
 		char aBuf[128];
-		CTextCursor Cursor;
-		tw = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[apPlayers[j]].m_aName, -1, -1.0f);
-		TextRender()->SetCursor(&Cursor, x+64, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = 220;
-		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[apPlayers[j]].m_aName, -1);
+		
+		s_Cursor.Reset();
+		s_Cursor.m_MaxWidth = 220;
+		s_Cursor.MoveTo(x+64, y);
+		TextRender()->TextOutlined(&s_Cursor, m_pClient->m_aClients[apPlayers[j]].m_aName, -1);
 
 		px = IsSplit ? 200 : 325;
+		s_Cursor.m_MaxWidth = -1;
+		s_Cursor.m_Align = TEXTALIGN_RIGHT;
 		if(Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
 		{
 			if(Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
@@ -318,22 +332,26 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 			}
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Frags);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		else if(Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Deaths);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		if(Config()->m_ClStatboardInfos & TC_STATS_SUICIDES)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Suicides);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		if(Config()->m_ClStatboardInfos & TC_STATS_RATIO)
@@ -342,23 +360,26 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 				str_format(aBuf, sizeof(aBuf), "--");
 			else
 				str_format(aBuf, sizeof(aBuf), "%.2f", (float)(pStats->m_Frags)/pStats->m_Deaths);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		if(Config()->m_ClStatboardInfos & TC_STATS_NET)
 		{
 			str_format(aBuf, sizeof(aBuf), "%+d", pStats->m_Frags-pStats->m_Deaths);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		if(Config()->m_ClStatboardInfos & TC_STATS_FPM)
 		{
 			float Fpm = pStats->m_IngameTicks > 0 ? (float)(pStats->m_Frags * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks : 0.f;
 			str_format(aBuf, sizeof(aBuf), "%.1f", Fpm);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		if(Config()->m_ClStatboardInfos & TC_STATS_SPREE)
@@ -370,23 +391,26 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 			}
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_CurrentSpree);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		else if(Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
 		{
 			px += 40;
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_BestSpree);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->m_ClStatboardInfos&TC_STATS_FLAGGRABS)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_FlagGrabs);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			s_Cursor.Reset();
+			s_Cursor.MoveTo(x+px, y);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
 		px -= 40;
@@ -441,8 +465,10 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 		{
 			if(pStats->m_FlagCaptures <= 0)
 			{
-				tw = TextRender()->TextWidth(0, FontSize, "--", -1, -1.0f);
-				TextRender()->Text(0, x-tw/2.0f+px, y, FontSize, "--", -1.0f);
+				s_Cursor.Reset();
+				s_Cursor.MoveTo(x+px, y);
+				s_Cursor.m_Align = TEXTALIGN_CENTER;
+				TextRender()->TextOutlined(&s_Cursor, "--", -1);
 			}
 			else
 			{
@@ -471,7 +497,10 @@ void CStats::RenderStatboard(int OffsetX, bool IsUpper)
 				if(DigitalDisplay)
 				{
 					str_format(aBuf, sizeof(aBuf), "x%d", pStats->m_FlagCaptures);
-					TextRender()->Text(0, x+TempX, y, FontSize, aBuf, -1.0f);
+					s_Cursor.Reset();
+					s_Cursor.MoveTo(x+TempX, y);
+					s_Cursor.m_Align = TEXTALIGN_LEFT;
+					TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 				}
 			}
 			px += 100;
