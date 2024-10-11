@@ -1489,6 +1489,7 @@ if(CLIENT)
     components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
+    components/menus_zilly.cpp
     components/motd.cpp
     components/motd.h
     components/nameplates.cpp
