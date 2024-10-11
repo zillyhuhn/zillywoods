@@ -201,10 +201,10 @@ public:
 	// client data
 	struct CClientData
 	{
-		char m_aName[MAX_NAME_LENGTH];
-		char m_aClan[MAX_CLAN_LENGTH];
+		char m_aName[MAX_NAME_ARRAY_SIZE];
+		char m_aClan[MAX_CLAN_ARRAY_SIZE];
 		int m_Country;
-		char m_aaSkinPartNames[NUM_SKINPARTS][24];
+		char m_aaSkinPartNames[NUM_SKINPARTS][MAX_SKIN_ARRAY_SIZE];
 		int m_aUseCustomColors[NUM_SKINPARTS];
 		int m_aSkinPartColors[NUM_SKINPARTS];
 		int m_SkinPartIDs[NUM_SKINPARTS];
@@ -232,10 +232,10 @@ public:
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
 	int m_TeamCooldownTick;
-	bool m_MuteServerBroadcast;
 	float m_TeamChangeTime;
 	bool m_IsXmasDay;
 	float m_LastSkinChangeTime;
+	int m_IdentityState;
 	bool m_IsEasterDay;
 	bool m_InitComplete;
 
@@ -302,6 +302,8 @@ public:
 	bool IsEaster() const;
 	int RacePrecision() const { return m_Snap.m_pGameDataRace ? m_Snap.m_pGameDataRace->m_Precision : 3; }
 	bool IsWorldPaused() const { return m_Snap.m_pGameData && (m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)); }
+	bool IsDemoPlaybackPaused() const;
+	float GetAnimationPlaybackSpeed() const;
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team, bool Silent = false);

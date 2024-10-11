@@ -19,6 +19,12 @@ CMenus::CListBox::CListBox()
 	m_OffsetFilter = 0.0f;
 }
 
+void CMenus::CListBox::DoBegin(const CUIRect *pRect)
+{
+	// setup the variables
+	m_ListBoxView = *pRect;
+}
+
 void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 							   float HeaderHeight, float Spacing)
 {
@@ -37,6 +43,13 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 	View.HSplitTop(Spacing, &Header, &View);
 
 	// setup the variables
+	m_ListBoxView = View;
+}
+
+void CMenus::CListBox::DoSpacing(float Spacing)
+{
+	CUIRect View = m_ListBoxView;
+	View.HSplitTop(Spacing, 0, &View);
 	m_ListBoxView = View;
 }
 
@@ -197,6 +210,14 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
 	}
 
+	return Item;
+}
+
+CMenus::CListboxItem CMenus::CListBox::DoSubheader()
+{
+	CListboxItem Item = DoNextRow();
+	CUIRect r = Item.m_Rect;
+	m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.2f), 0, 0.0f);
 	return Item;
 }
 

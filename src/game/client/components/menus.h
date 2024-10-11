@@ -102,7 +102,7 @@ public:
 		bool m_CleanBackground;
 		float m_FadeStartTime;
 	public:
-		CButtonContainer(bool CleanBackground = false) { m_CleanBackground = CleanBackground; }
+		CButtonContainer(bool CleanBackground = false) : m_FadeStartTime(0.0f) { m_CleanBackground = CleanBackground; }
 		const void *GetID() const { return &m_FadeStartTime; }
 		float GetFade(bool Checked = false, float Seconds = 0.6f);
 		bool IsCleanBackground() const { return m_CleanBackground; }
@@ -119,10 +119,12 @@ private:
 	bool DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked = false);
 
 	void DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor = 0);
-	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect);
+	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect, int Corners = CUI::CORNER_ALL);
 
 	bool DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL);
-	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
+	bool DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, unsigned MaxLength, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL);
+	void DoEditBoxOption(void *pID, char *pOption, unsigned OptionSize, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
+	void DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, unsigned OptionMaxLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
 	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
 	void DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int Num, IScrollbarScale *pScale = &LinearScrollbarScale);
 	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive);
@@ -235,6 +237,7 @@ private:
 	{
 		bool m_Visible;
 		bool m_Selected;
+		bool m_Disabled;
 		CUIRect m_Rect;
 	};
 
@@ -266,15 +269,19 @@ private:
 	public:
 		CListBox();
 
+		void DoBegin(const CUIRect *pRect);
 		void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f);
+		void DoSpacing(float Spacing = 20.0f);
 		bool DoFilter(float FilterHeight = 20.0f, float Spacing = 2.0f);
 		void DoFooter(const char *pBottomText, float FooterHeight = 20.0f); // call before DoStart to create a footer
 		void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex,
 					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0);
 		CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
+		CListboxItem DoSubheader();
 		int DoEnd();
 		bool FilterMatches(const char *pNeedle) const;
 		bool WasItemActivated() const { return m_ListBoxItemActivated; };
+		float GetScrollBarWidth() const { return m_ScrollRegion.IsScrollbarShown() ? 20 : 0; } // defined in menus_scrollregion.cpp
 	};
 
 
@@ -309,7 +316,7 @@ private:
 
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
-		SETTINGS_TEE,
+		SETTINGS_TBD, // TODO: replace this removed tee page
 		SETTINGS_CONTROLS,
 		SETTINGS_GRAPHICS,
 		SETTINGS_SOUND,
@@ -332,6 +339,7 @@ private:
 	bool m_PrevCursorActive;
 	bool m_PopupActive;
 	int m_ActiveListBox;
+	int m_PopupSelection;
 	bool m_SkinModified;
 	bool m_KeyReaderWasActive;
 	bool m_KeyReaderIsActive;
@@ -341,7 +349,7 @@ private:
 	void DefaultButtonCallback() { /* do nothing */ };
 	enum
 	{
-		BUTTON_CONFIRM = 0, // confirm / yes / close
+		BUTTON_CONFIRM = 0, // confirm / yes / close / ok
 		BUTTON_CANCEL, // cancel / no
 		NUM_BUTTONS
 	};
@@ -360,6 +368,7 @@ private:
 		const char *pConfirmButtonLabel, const char *pCancelButtonLabel,
 		FPopupButtonCallback pfnConfirmButtonCallback = &CMenus::DefaultButtonCallback, int ConfirmNextPopup = POPUP_NONE,
 		FPopupButtonCallback pfnCancelButtonCallback = &CMenus::DefaultButtonCallback, int CancelNextPopup = POPUP_NONE);
+	void PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallback = &CMenus::DefaultButtonCallback);
 
 	// images
 	struct CMenuImage
@@ -424,7 +433,7 @@ private:
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	int m_TeePartSelected;
-	char m_aSaveSkinName[24];
+	char m_aSaveSkinName[MAX_SKIN_ARRAY_SIZE];
 
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
@@ -478,18 +487,12 @@ private:
 		{
 			if(!m_Valid || !m_InfosLoaded)
 				return -1;
-			return ((m_Info.m_aNumTimelineMarkers[0]<<24)&0xFF000000) |
-				((m_Info.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
-				((m_Info.m_aNumTimelineMarkers[2]<<8)&0xFF00) |
-				(m_Info.m_aNumTimelineMarkers[3]&0xFF);
+			return bytes_be_to_uint(m_Info.m_aNumTimelineMarkers);
 		}
 
 		int Length() const
 		{
-			return ((m_Info.m_aLength[0]<<24)&0xFF000000) |
-				((m_Info.m_aLength[1]<<16)&0xFF0000) |
-				((m_Info.m_aLength[2]<<8)&0xFF00) |
-				(m_Info.m_aLength[3]&0xFF);
+			return bytes_be_to_uint(m_Info.m_aLength);
 		}
 
 		bool operator<(const CDemoItem &Other) const
@@ -506,7 +509,8 @@ private:
 	{
 		int m_Type;
 		int m_Order;
-		public:
+
+	public:
 		CDemoComparator(int Type, int Order)
 		{
 			m_Type = Type;
@@ -548,15 +552,15 @@ private:
 
 	void DemolistOnUpdate(bool Reset);
 	void DemolistPopulate();
-	static int DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int StorageType, void *pUser);
+	static int DemolistFetchCallback(const CFsFileInfo* pFileInfo, int IsDir, int StorageType, void *pUser);
 
 	// friends
 	class CFriendItem
 	{
 	public:
 		const CServerInfo *m_pServerInfo;
-		char m_aName[MAX_NAME_LENGTH];
-		char m_aClan[MAX_CLAN_LENGTH];
+		char m_aName[MAX_NAME_ARRAY_SIZE];
+		char m_aClan[MAX_CLAN_ARRAY_SIZE];
 		int m_FriendState;
 		bool m_IsPlayer;
 
@@ -611,8 +615,6 @@ private:
 			FILTER_FAVORITES,
 		};
 
-		// buttons var
-		int m_SwitchButton;
 		CButtonContainer m_DeleteButtonContainer;
 		CButtonContainer m_UpButtonContainer;
 		CButtonContainer m_DownButtonContainer;
@@ -690,8 +692,7 @@ private:
 		COL_BROWSER_PING,
 		NUM_BROWSER_COLS,
 
-		COL_DEMO_ICON=0,
-		COL_DEMO_NAME,
+		COL_DEMO_NAME = 0,
 		COL_DEMO_LENGTH,
 		COL_DEMO_DATE,
 		NUM_DEMO_COLS,
@@ -761,7 +762,7 @@ private:
 	void UpdateVideoModeSettings();
 
 	// found in menus.cpp
-	int Render();
+	void Render();
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 	void RenderBackButton(CUIRect MainView);
@@ -806,6 +807,7 @@ private:
 	void RenderServerbrowserOverlay();
 	void RenderFilterHeader(CUIRect View, int FilterIndex);
 	void PopupConfirmRemoveFilter();
+	void PopupConfirmCountryFilter();
 	int DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected, bool ShowServerInfo, CScrollRegion *pScroll = 0);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainConnect(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -826,7 +828,7 @@ private:
 	void RenderSkinPartPalette(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
-	void RenderSettingsTee(CUIRect MainView);
+	// void RenderSettingsTBD(CUIRect MainView); // TODO: change removed tee page to something else
 	void RenderSettingsTeeBasic(CUIRect MainView);
 	void RenderSettingsTeeCustom(CUIRect MainView);
 	void PopupConfirmDeleteSkin();
@@ -839,6 +841,7 @@ private:
 	void ResetSettingsControls();
 	void ResetSettingsGraphics();
 	void ResetSettingsSound();
+	void PopupConfirmPlayerCountry();
 
 	bool DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 						  const sorted_array<CVideoMode>& lModes);
@@ -886,7 +889,7 @@ public:
 	};
 	void GetSwitchTeamInfo(CSwitchTeamInfo *pInfo);
 
-	static CMenusKeyBinder m_Binder;
+	CMenusKeyBinder m_Binder;
 
 	CMenus();
 

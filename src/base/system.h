@@ -765,6 +765,21 @@ int net_udp_close(NETSOCKET sock);
 NETSOCKET net_tcp_create(NETADDR bindaddr);
 
 /*
+	Function: net_tcp_set_linger
+		Sets behaviour when closing the socket.
+
+	Parameters:
+		sock - Socket to use.
+		state - What to do when closing the socket.
+				1 abort connection on close.
+				0 shutdown the connection properly on close.
+
+	Returns:
+		Returns 0 on success.
+*/
+int net_tcp_set_linger(NETSOCKET sock, int state);
+
+/*
 	Function: net_tcp_listen
 		Makes the socket start listening for new connections.
 
@@ -1336,9 +1351,27 @@ int str_span(const char *str, const char *set);
 typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
+typedef struct
+{
+	const char* m_pName;
+	time_t m_TimeCreated; // seconds since UNIX Epoch
+	time_t m_TimeModified; // seconds since UNIX Epoch
+} CFsFileInfo;
 
-typedef int (*FS_LISTDIR_INFO_CALLBACK)(const char *name, time_t date, int is_dir, int dir_type, void *user);
-int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user);
+/* Group: Filesystem */
+
+/*
+	Function: fs_listdir_fileinfo
+		Lists the files in a directory and gets additional file information
+
+	Parameters:
+		dir - Directory to list
+		cb - Callback function to call for each entry
+		type - Type of the directory
+		user - Pointer to give to the callback
+*/
+typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo* info, int is_dir, int dir_type, void *user);
+void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user);
 
 /*
 	Function: fs_makedir
@@ -1501,6 +1534,23 @@ int fs_read(const char *name, void **result, unsigned *result_len);
 char *fs_read_str(const char *name);
 
 /*
+	Function: fs_file_time
+		Gets the creation and the last modification date of a file.
+
+	Parameters:
+		name - The filename.
+		created - Pointer to time_t
+		modified - Pointer to time_t
+
+	Returns:
+		0 on success non-zero on failure
+
+	Remarks:
+		- Returned time is in seconds since UNIX Epoch
+*/
+int fs_file_time(const char *name, time_t *created, time_t *modified);
+
+/*
 	Group: Undocumented
 */
 
@@ -1575,6 +1625,10 @@ int str_isspace(char c);
 char str_uppercase(char c);
 unsigned str_quickhash(const char *str);
 
+enum
+{
+	UTF8_BYTE_LENGTH = 4
+};
 /*
 	Function: str_utf8_is_whitespace
 		Check if the unicode is an utf8 whitespace.
@@ -1692,6 +1746,22 @@ int str_utf8_encode(char *ptr, int chr);
 		- The string is treated as zero-terminated utf8 string.
 */
 int str_utf8_check(const char *str);
+
+/*
+	Function: str_utf8_copy_num
+		Copies a number of utf8 characters from one string to another.
+
+	Parameters:
+		dst - Pointer to a buffer that shall receive the string.
+		src - String to be copied.
+		dst_size - Size of the buffer dst.
+		num - maximum number of utf8 characters to be copied.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+		- Garantees that dst string will contain zero-termination.
+*/
+void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num);
 
 /*
 	Function: secure_random_init

@@ -96,6 +96,8 @@ CMenus::CMenus()
 	m_aFilterString[0] = 0;
 
 	m_ActiveListBox = ACTLB_NONE;
+
+	m_PopupSelection = -2;
 }
 
 float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
@@ -233,17 +235,17 @@ bool CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool 
 	return UI()->DoButtonLogic(pBC->GetID(), pRect);
 }
 
-bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect)
+bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect, int Corners)
 {
 	if(Checked)
 	{
-		RenderTools()->DrawUIRect(pRect, vec4(0.9f, 0.9f, 0.9f, 0.5f), CUI::CORNER_ALL, 5.0f);
+		RenderTools()->DrawUIRect(pRect, vec4(0.9f, 0.9f, 0.9f, 0.5f), Corners, 5.0f);
 		TextRender()->TextColor(CUI::ms_HighlightTextColor);
 		TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 	}
 	else if(UI()->HotItem() == pID)
 	{
-		RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
+		RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f), Corners, 5.0f);
 	}
 
 	CUIRect Label;
@@ -339,6 +341,11 @@ bool CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID,
 
 bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
 {
+	return DoEditBoxUTF8(pID, pRect, pStr, StrSize, StrSize, FontSize, pOffset, Hidden, Corners);
+}
+
+bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, unsigned MaxLength, float FontSize, float *pOffset, bool Hidden, int Corners)
+{
 	bool Inside = UI()->MouseHovered(pRect);
 	bool Changed = false;
 	bool UpdateOffset = false;
@@ -403,7 +410,7 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			{
 				Len = str_length(pStr);
 				int NumChars = Len;
-				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
+				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, MaxLength, &Len, &s_AtIndex, &NumChars, Input());
 			}
 		}
 	}
@@ -506,7 +513,12 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	return Changed;
 }
 
-void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset, bool Hidden)
+void CMenus::DoEditBoxOption(void *pID, char *pOption, unsigned OptionSize, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden)
+{
+	DoEditBoxOptionUTF8(pID, pOption, OptionSize, OptionSize, pRect, pStr, VSplitVal, pOffset, Hidden);
+}
+
+void CMenus::DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, unsigned OptionMaxLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -518,7 +530,7 @@ void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const C
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
+	DoEditBoxUTF8(pID, &EditBox, pOption, OptionSize, OptionMaxLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
 void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale, bool Infinite)
@@ -572,14 +584,16 @@ void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pR
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Label, ScrollBar;
-	pRect->VSplitLeft(5.0f, 0, &Label);
+	pRect->VSplitLeft(pRect->h+5.0f, 0, &Label);
 	Label.VSplitRight(60.0f, &Label, &ScrollBar);
-
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
+
+	if(UI()->HotItem() != pID && UI()->MouseHovered(pRect) && UI()->MouseButtonClicked(0))
+		Value = (Value + 1) % Num;
 
 	*pOption = clamp(Value, 0, Max);
 }
@@ -805,18 +819,19 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 	RenderTools()->DrawUIRect(&Slider, SliderColor, CUI::CORNER_ALL, Slider.h/2.0f);
 }
 
-int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
+int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* pNewModifier)
 {
 	// process
-	static const void *pGrabbedID = 0;
-	static bool MouseReleased = true;
-	static int ButtonUsed = 0;
+	static const void *s_pGrabbedID = 0;
+	static bool s_MouseReleased = true;
+	static int s_ButtonUsed = 0;
+
 	const bool Hovered = UI()->MouseHovered(pRect);
 	int NewKey = Key;
-	*NewModifier = Modifier;
+	*pNewModifier = Modifier;
 
-	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pBC->GetID())
-		MouseReleased = true;
+	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pBC->GetID())
+		s_MouseReleased = true;
 
 	if(UI()->CheckActiveItem(pBC->GetID()))
 	{
@@ -826,15 +841,15 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
 			{
 				NewKey = m_Binder.m_Key.m_Key;
-				*NewModifier = m_Binder.m_Modifier;
+				*pNewModifier = m_Binder.m_Modifier;
 			}
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
-			MouseReleased = false;
-			pGrabbedID = pBC->GetID();
+			s_MouseReleased = false;
+			s_pGrabbedID = pBC->GetID();
 		}
 
-		if(ButtonUsed == 1 && !UI()->MouseButton(1))
+		if(s_ButtonUsed == 1 && !UI()->MouseButton(1))
 		{
 			if(Hovered)
 				NewKey = 0;
@@ -843,20 +858,20 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 	}
 	else if(UI()->HotItem() == pBC->GetID())
 	{
-		if(MouseReleased)
+		if(s_MouseReleased)
 		{
 			if(UI()->MouseButton(0))
 			{
 				m_Binder.m_TakeKey = true;
 				m_Binder.m_GotKey = false;
 				UI()->SetActiveItem(pBC->GetID());
-				ButtonUsed = 0;
+				s_ButtonUsed = 0;
 			}
 
 			if(UI()->MouseButton(1))
 			{
 				UI()->SetActiveItem(pBC->GetID());
-				ButtonUsed = 1;
+				s_ButtonUsed = 1;
 			}
 		}
 	}
@@ -865,21 +880,20 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 		UI()->SetHotItem(pBC->GetID());
 
 	// draw
-	if(UI()->CheckActiveItem(pBC->GetID()) && ButtonUsed == 0)
+	if(UI()->CheckActiveItem(pBC->GetID()) && s_ButtonUsed == 0)
 	{
 		DoButton_KeySelect(pBC, "???", pRect);
 		m_KeyReaderIsActive = true;
 	}
+	else if(Key == 0)
+	{
+		DoButton_KeySelect(pBC, "", pRect);
+	}
 	else
 	{
-		if(Key == 0)
-			DoButton_KeySelect(pBC, "", pRect);
-		else
-		{
-			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*NewModifier), Input()->KeyName(Key));
-			DoButton_KeySelect(pBC, aBuf, pRect);
-		}
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*pNewModifier), Input()->KeyName(Key));
+		DoButton_KeySelect(pBC, aBuf, pRect);
 	}
 	return NewKey;
 }
@@ -899,8 +913,9 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 	if(Client()->State() == IClient::STATE_ONLINE)
 	{
+		int NumButtons = 6;
 		float Spacing = 3.0f;
-		float ButtonWidth = (Box.w / 6.0f) - (Spacing*5.0) / 6.0f;
+		float ButtonWidth = (Box.w/NumButtons)-(Spacing*(NumButtons-1))/NumButtons;
 		float Alpha = 1.0f;
 		if(m_GamePage == PAGE_SETTINGS)
 			Alpha = InactiveAlpha;
@@ -958,8 +973,9 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 	if((Client()->State() == IClient::STATE_OFFLINE && m_MenuPage == PAGE_SETTINGS) || (Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS))
 	{
+		int NumButtons = 5;
 		float Spacing = 3.0f;
-		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+		float ButtonWidth = (Box.w/NumButtons)-(Spacing*(NumButtons-1))/NumButtons;
 		float NotActiveAlpha = Client()->State() == IClient::STATE_ONLINE ? 0.5f : 1.0f;
 		int Corners = Client()->State() == IClient::STATE_ONLINE ? CUI::CORNER_T : CUI::CORNER_ALL;
 
@@ -990,18 +1006,19 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			}
 		}
 
-		Box.VSplitLeft(Spacing, 0, &Box); // little space
-		Box.VSplitLeft(ButtonWidth, &Button, &Box);
-		{
-			static CButtonContainer s_TeeButton;
-			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_TEE, &Button,
-				Config()->m_UiSettingsPage == SETTINGS_TEE ? 1.0f : NotActiveAlpha, 1.0f, Corners))
-			{
-				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TEE);
-				Config()->m_UiSettingsPage = SETTINGS_TEE;
-			}
-		}
 
+		// TODO: replace tee page to something else
+		// Box.VSplitLeft(Spacing, 0, &Box); // little space
+		// Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		// {
+		// 	static CButtonContainer s_TeeButton;
+		// 	if(DoButton_MenuTabTop(&s_TeeButton, Localize("TBD"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_TBD, &Button,
+		// 		Config()->m_UiSettingsPage == SETTINGS_TBD ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+		// 	{
+		// 		m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TBD);
+		// 		Config()->m_UiSettingsPage = SETTINGS_TBD;
+		// 	}
+		// }
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
@@ -1435,8 +1452,16 @@ void CMenus::PopupConfirm(const char *pTitle, const char *pMessage, const char *
 	m_Popup = POPUP_CONFIRM;
 }
 
+void CMenus::PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallback)
+{
+	m_PopupSelection = Selection;
+	m_aPopupButtons[BUTTON_CONFIRM].m_NextPopup = POPUP_NONE;
+	m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback = pfnOkButtonCallback;
+	m_Popup = POPUP_COUNTRY;
+}
 
-int CMenus::Render()
+
+void CMenus::Render()
 {
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
@@ -1463,11 +1488,6 @@ int CMenus::Render()
 	if(IsBackgroundNeeded())
 		RenderBackground(Client()->LocalTime());
 
-	CUIRect TabBar, MainView;
-
-	// some margin around the screen
-	//Screen.Margin(10.0f, &Screen);
-
 	static bool s_SoundCheck = false;
 	if(!s_SoundCheck && m_Popup == POPUP_NONE)
 	{
@@ -1492,17 +1512,12 @@ int CMenus::Render()
 			if(Config()->m_UiWideview)
 				VMargin = min(VMargin, 60.0f);
 
+			CUIRect TabBar, MainView;
 			Screen.VMargin(VMargin, &MainView);
 			MainView.HSplitTop(BarHeight, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
-			// news is not implemented yet
-			/*if(m_MenuPage <= PAGE_NEWS || m_MenuPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_GAME && m_MenuPage <= PAGE_CALLVOTE))
-			{
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-				m_MenuPage = PAGE_INTERNET;
-			}*/
-
+			// render top buttons
 			{
 				// quit button
 				CUIRect Button, Row;
@@ -1626,7 +1641,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
-			pExtraText = "Please enter the password.";
+			pExtraText = Localize("Please enter the password.");
 		}
 		else if(m_Popup == POPUP_QUIT)
 		{
@@ -1816,13 +1831,6 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_COUNTRY)
 		{
 			// selected filter
-			CBrowserFilter *pFilter = GetSelectedBrowserFilter();
-			CServerFilterInfo FilterInfo;
-			pFilter->GetFilter(&FilterInfo);
-
-			static int s_ActSelection = -2;
-			if(s_ActSelection == -2)
-				s_ActSelection = FilterInfo.m_Country;
 			static CListBox s_ListBox;
 			int OldSelected = -1;
 			s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 12, 1, OldSelected, &Box, false);
@@ -1832,7 +1840,7 @@ int CMenus::Render()
 				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 				if(pEntry->m_Blocked)
 					continue;
-				if(pEntry->m_CountryCode == s_ActSelection)
+				if(pEntry->m_CountryCode == m_PopupSelection)
 					OldSelected = i;
 
 				CListboxItem Item = s_ListBox.DoNextItem(pEntry, OldSelected == i);
@@ -1868,21 +1876,20 @@ int CMenus::Render()
 
 			const int NewSelected = s_ListBox.DoEnd();
 			if(OldSelected != NewSelected)
-				s_ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+				m_PopupSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
 			Part.VMargin(120.0f, &Part);
 
 			static CButtonContainer s_ButtonCountry;
 			if(DoButton_Menu(&s_ButtonCountry, Localize("Ok"), 0, &BottomBar) || m_EnterPressed)
 			{
-				FilterInfo.m_Country = s_ActSelection;
-				pFilter->SetFilter(&FilterInfo);
+				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
 				m_Popup = POPUP_NONE;
 			}
 
 			if(m_EscapePressed)
 			{
-				s_ActSelection = FilterInfo.m_Country;
+				m_PopupSelection = -2;
 				m_Popup = POPUP_NONE;
 			}
 		}
@@ -1979,7 +1986,7 @@ int CMenus::Render()
 			Box.HSplitTop(ButtonHeight, &EditBox, &Box);
 
 			static float s_OffsetName = 0.0f;
-			DoEditBoxOption(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
+			DoEditBoxOptionUTF8(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), MAX_NAME_LENGTH, &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
 
 			// button
 			static CButtonContainer s_EnterButton;
@@ -2031,8 +2038,6 @@ int CMenus::Render()
 		if(m_Popup == POPUP_NONE)
 			UI()->SetActiveItem(0);
 	}
-
-	return 0;
 }
 
 

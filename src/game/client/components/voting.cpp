@@ -81,7 +81,7 @@ void CVoting::RemovevoteOption(int OptionID)
 void CVoting::AddvoteOption(const char *pDescription, const char *pCommand)
 {
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "add_vote \"%s\" %s", pDescription, pCommand);
+	str_format(aBuf, sizeof(aBuf), "add_vote \"%s\" \"%s\"", pDescription, pCommand);
 	Client()->Rcon(aBuf);
 }
 
@@ -120,7 +120,20 @@ void CVoting::AddOption(const char *pDescription)
 	if(!m_pFirst)
 		m_pFirst = pOption;
 
+	int Depth = 0;
+	for(;*pDescription == '#'; pDescription++, Depth++);
+	pOption->m_Depth = Depth ? Depth : pOption->m_pPrev ? pOption->m_pPrev->m_Depth : 0;
+
+	pOption->m_IsSubheader = Depth;
+
+	if(!*pDescription)
+		pOption->m_Depth = 0;
+
 	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
+
+	if(Config()->m_Debug)
+		dbg_msg("voting", "added option '%s' with depth='%d'", pDescription, pOption->m_Depth);
+
 	++m_NumVoteOptions;
 }
 
